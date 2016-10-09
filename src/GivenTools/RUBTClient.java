@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,34 @@ public class RUBTClient {
 	/**
 	 * @param args
 	 */
+	
+	/**
+     * Key used to retrieve the interval from the tracker 
+     */
+	public final static ByteBuffer KEY_INTERVAL = 
+			ByteBuffer.wrap(new byte[]{ 'i', 'n', 't', 'e','r','v','a','l' });
+	/**
+     * Key used to retrieve the peer list from the tracker 
+     */
+	public final static ByteBuffer KEY_PEERS = 
+			ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r','s'});
+	/**
+     * Key used to retrieve the peer id from the tracker 
+     */
+	public final static ByteBuffer KEY_PEER_ID = 
+			ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r',' ','i','d'});
+	/**
+     * Key used to retrieve the peer port from the tracker 
+     */
+	public final static ByteBuffer KEY_PEER_PORT = 
+			ByteBuffer.wrap(new byte[]{ 'p', 'o', 'r', 't'});
+	/**
+     * Key used to retrieve the peer ip from the tracker 
+     */
+	public final static ByteBuffer KEY_PEER_IP = 
+			ByteBuffer.wrap(new byte[]{ 'i', 'p'});
+	
+	
 	private static int interval;
 	private static List<Peer> peers;
 	
@@ -40,7 +69,7 @@ public class RUBTClient {
 		HashMap tracker_info = null;
 		
 		//Open the torrent file and retrieve the TorrentInfo
-		TorrentInfo TI = openTorrent(args[0]);
+		TorrentInfo TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
 		url = getURL(TI);
 		//Get the host and portno by using the TorrentInfo
 		hostname = url.getHost();
@@ -51,8 +80,12 @@ public class RUBTClient {
 		
 		//connects to the tracker and retrieves the interval and peer list data
 		tracker_info = connectTracker(TI, url, hostname, portno);
-		interval = ((Integer)tracker_info.get("interval".getBytes())).intValue();
+		
+		interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
+		
+		//prints out the info decoded from the tracker
+		ToolKit.print(tracker_info);
 	}
 	
 	//Gets TorrentInfo from torrent file
@@ -104,7 +137,7 @@ public class RUBTClient {
 		try{
 			getRequest = url +
 					String.format("?info_hash=%s&peer_id=ABCDEFGHIJKLMNOPQRST&port=%s&uploaded=0&downloaded=0&left=%s", 
-					TI.info_hash,portno,TI.file_length);
+					URLEncoder.encode(new String(TI.info_hash.array()), "ISO-8859-1"),portno,TI.file_length);
 			tracker = new URL(getRequest);
 		}catch(Exception e){
 			System.out.println(e);
@@ -144,15 +177,16 @@ public class RUBTClient {
 	}
 	
 	private static void buildPeerList(HashMap info){
-		ArrayList list = (ArrayList)info.get("peers".getBytes());
+		ArrayList list = (ArrayList)info.get(KEY_PEERS);
+		peers = new ArrayList<Peer>();
 		
 		for(int i = 0; i < list.size(); i++){
 			HashMap peer_info = (HashMap)list.get(i);
 			
 			//gets peer id, ip and port
-			String peer_id = new String(((ByteBuffer)peer_info.get("peer id".getBytes())).array());
-			String ip = new String(((ByteBuffer)peer_info.get("ip".getBytes())).array());
-			int port = ((Integer)peer_info.get("port".getBytes())).intValue();
+			String peer_id = new String(((ByteBuffer)peer_info.get(KEY_PEER_ID)).array());
+			String ip = new String(((ByteBuffer)peer_info.get(KEY_PEER_IP)).array());
+			int port = ((Integer)peer_info.get(KEY_PEER_PORT)).intValue();
 			
 			//creates new peer and adds him to the peer list
 			//need to implement check according to assignment
