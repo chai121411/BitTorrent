@@ -12,7 +12,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
@@ -79,7 +78,7 @@ public class RUBTClient {
 		//Open connection...
 		
 		//connects to the tracker and retrieves the interval and peer list data
-		tracker_info = connectTracker(TI, url, hostname, portno);
+		tracker_info = connectTracker(TI, url, portno);
 		
 		interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
@@ -119,19 +118,11 @@ public class RUBTClient {
 		return url;
 	}
 	
-	private static HashMap connectTracker(TorrentInfo TI, URL url, String hostname, int portno){
+	private static HashMap connectTracker(TorrentInfo TI, URL url, int portno){
 		URL tracker = null;
-		Socket sock = null;
 		String getRequest = null;
 		HttpURLConnection tracker_connect = null;
 		HashMap decode = null;
-		
-		//opens socket to communicate with tracker
-		try{
-			sock = new Socket (hostname,portno);
-		}catch (Exception e){
-			System.out.println(e);
-		}
 		
 		//creating tracker connection url
 		try{
@@ -163,13 +154,6 @@ public class RUBTClient {
 			decode = (HashMap)Bencoder2.decode(response);	
 		}catch (Exception e){
 			System.out.println(e);
-		}
-		
-		//close socket
-		try{
-			sock.close();
-		}catch(Exception e){
-			e.printStackTrace();
 		}
 		
 		return decode;
