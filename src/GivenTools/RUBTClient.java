@@ -18,7 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
+import java.util.Random;
 /**
  * @author chai1
  * @author trw63
@@ -118,31 +118,32 @@ public class RUBTClient {
 		return url;
 	}
 	
-	private static HashMap connectTracker(TorrentInfo TI, URL url, int portno){
+	private static HashMap connectTracker (TorrentInfo TI, URL url, int portno) {
 		URL tracker = null;
 		String getRequest = null;
 		HttpURLConnection tracker_connect = null;
 		HashMap decode = null;
 		
 		//creating tracker connection url
-		try{
+		try {
+			String peerID = generatePeerID();
 			getRequest = url +
-					String.format("?info_hash=%s&peer_id=ABCDEFGHIJKLMNOPQRST&port=%s&uploaded=0&downloaded=0&left=%s", 
-					URLEncoder.encode(new String(TI.info_hash.array()), "ISO-8859-1"),portno,TI.file_length);
+					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s", 
+					URLEncoder.encode(new String(TI.info_hash.array()), "ISO-8859-1"),peerID,portno,TI.file_length);
 			tracker = new URL(getRequest);
-		}catch(Exception e){
+		} catch (Exception e) {
 			System.out.println(e);
 		}
 		
 		//Making the connection with the tracker 
 		try {
 			tracker_connect = (HttpURLConnection)tracker.openConnection();
-		}catch (Exception e){ 
+		} catch (Exception e) { 
 			System.out.println(e);
 		}
 		
 		//try reading info from tracker
-		try{
+		try {
 			BufferedInputStream tracker_response = new BufferedInputStream(tracker_connect.getInputStream());
 			ByteArrayOutputStream write_bytes = new ByteArrayOutputStream();
 			byte[] bytes = new byte[1];
@@ -151,8 +152,10 @@ public class RUBTClient {
 				write_bytes.write(bytes);
 			
 			byte[] response = write_bytes.toByteArray();
+			
+			//ToolKit.print(response);//info before it's decoded
 			decode = (HashMap)Bencoder2.decode(response);	
-		}catch (Exception e){
+		} catch (Exception e){
 			System.out.println(e);
 		}
 		
@@ -164,7 +167,7 @@ public class RUBTClient {
 		ArrayList list = (ArrayList)info.get(KEY_PEERS);
 		peers = new ArrayList<Peer>();
 		
-		for(int i = 0; i < list.size(); i++){
+		for (int i = 0; i < list.size(); i++) {
 			HashMap peer_info = (HashMap)list.get(i);
 			
 			//gets peer id, ip and port
@@ -180,6 +183,16 @@ public class RUBTClient {
 		}
 	}
 	
+	private static String generatePeerID () {
+		String s = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		Random r = new Random();
+		String peerID = "";
+		
+		for (int i = 0; i < 20; i++)
+			peerID += s.charAt(r.nextInt(s.length()));
+		
+		return peerID;
+	}
 	
 	private static void WriteToFile (String path) {
 		try {
