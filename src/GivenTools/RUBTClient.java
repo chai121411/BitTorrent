@@ -81,7 +81,7 @@ public class RUBTClient {
 		tracker_info = connectTracker(TI, url, portno);
 		
 		interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
-		buildPeerList(tracker_info);
+		//buildPeerList(tracker_info);
 		
 		//prints out the info decoded from the tracker
 		ToolKit.print(tracker_info);
@@ -126,13 +126,18 @@ public class RUBTClient {
 		String peerID = null;
 		HttpURLConnection tracker_connect = null;
 		HashMap decode = null;
+		String hash = null;
 		
 		//creating tracker connection url
 		try {
 			peerID = generatePeerID();
+			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
+			
+			System.out.println(hash);
+			
 			getRequest = url +
 					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s", 
-					URLEncoder.encode(new String(TI.info_hash.array()), "ISO-8859-1"),peerID,portno,TI.file_length);
+					hash,peerID,portno,TI.file_length);
 			tracker = new URL(getRequest);
 		} catch (Exception e) {
 			System.out.println(e);
@@ -181,7 +186,7 @@ public class RUBTClient {
 			
 			//creates new peer and adds him to the peer list
 			//need to implement check according to assignment
-			// use only the peers at IP address with peer_id prefix RUBT11
+			// use only the peers at IP address with peer_id prefix RU11
 			Peer p = new Peer(peer_id, ip, port);
 			peers.add(p);
 		}
@@ -198,7 +203,7 @@ public class RUBTClient {
 		
 		return peerID;
 	}
-	
+		
 	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
 	private static void writeToFile(String path) {
 		try {
