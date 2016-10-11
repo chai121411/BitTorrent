@@ -56,26 +56,26 @@ public class RUBTClient {
 	public final static ByteBuffer KEY_PEER_IP = 
 			ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	
-	
 	private static int interval;
 	private static List<Peer> peers;
 	
 	public static void main(String[] args) {
 		String path = "src/GivenTools/newfile.txt";
 		URL url = null;
-		String hostname = null;
+		String hostName = null;
 		int portno = -1;
 		HashMap tracker_info = null;
+		TorrentInfo TI = null;
 		
+		//set args[0] ** Run -> Run Configurations -> Arguments -> {Type in args}
 		//Open the torrent file and retrieve the TorrentInfo
-		TorrentInfo TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
+		TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
 		url = getURL(TI);
 		//Get the host and portno by using the TorrentInfo
-		hostname = url.getHost();
+		hostName = url.getHost();
 		portno = url.getPort();
-		System.out.println(hostname);
+		System.out.println(hostName);
 		System.out.println(portno);
-		//Open connection...
 		
 		//connects to the tracker and retrieves the interval and peer list data
 		tracker_info = connectTracker(TI, url, portno);
@@ -88,7 +88,7 @@ public class RUBTClient {
 	}
 	
 	//Gets TorrentInfo from torrent file
-	private static TorrentInfo openTorrent (String args0) {
+	private static TorrentInfo openTorrent(String args0) {
 		byte[] bytes = null;
 		File file = null;
 		TorrentInfo TI = null;
@@ -100,8 +100,10 @@ public class RUBTClient {
 			dis.readFully(bytes);
 			dis.close();
 		} catch (final FileNotFoundException e) {
+			System.out.println("The torrent file was not found " + args0);
 			System.exit(1);
 		} catch (final IOException e) {
+			System.out.println("IO Exception. Exiting.");
 			System.exit(1);
 		}
 		
@@ -113,20 +115,21 @@ public class RUBTClient {
 		return TI;
 	}
 	
-	private static URL getURL (TorrentInfo TI) {
+	private static URL getURL(TorrentInfo TI) {
 		URL	url = TI.announce_url;
 		return url;
 	}
 	
-	private static HashMap connectTracker (TorrentInfo TI, URL url, int portno) {
+	private static HashMap connectTracker(TorrentInfo TI, URL url, int portno) {
 		URL tracker = null;
 		String getRequest = null;
+		String peerID = null;
 		HttpURLConnection tracker_connect = null;
 		HashMap decode = null;
 		
 		//creating tracker connection url
 		try {
-			String peerID = generatePeerID();
+			peerID = generatePeerID();
 			getRequest = url +
 					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s", 
 					URLEncoder.encode(new String(TI.info_hash.array()), "ISO-8859-1"),peerID,portno,TI.file_length);
@@ -145,7 +148,7 @@ public class RUBTClient {
 		//try reading info from tracker
 		try {
 			BufferedInputStream tracker_response = new BufferedInputStream(tracker_connect.getInputStream());
-			ByteArrayOutputStream write_bytes = new ByteArrayOutputStream();
+			ByteArrayOutputStream write_bytes = new ByteArrayOutputStream(); //write_bytes just holds the bytes; not being sent
 			byte[] bytes = new byte[1];
 			
 			while(tracker_response.read(bytes) != -1)
@@ -155,8 +158,9 @@ public class RUBTClient {
 			
 			//ToolKit.print(response);//info before it's decoded
 			decode = (HashMap)Bencoder2.decode(response);	
-		} catch (Exception e){
+		} catch (Exception e) {
 			System.out.println(e);
+			System.exit(1);
 		}
 		
 		return decode;
@@ -183,7 +187,8 @@ public class RUBTClient {
 		}
 	}
 	
-	private static String generatePeerID () {
+	//Generates a random peerId with length 20
+	private static String generatePeerID() {
 		String s = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		Random r = new Random();
 		String peerID = "";
@@ -194,7 +199,8 @@ public class RUBTClient {
 		return peerID;
 	}
 	
-	private static void WriteToFile (String path) {
+	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
+	private static void writeToFile(String path) {
 		try {
 			File file = new File(path);
 			String hello = "Hello World \n Hi";
@@ -206,7 +212,6 @@ public class RUBTClient {
 			} finally {
 			    stream.close();
 			}
-
     	} catch (IOException e) {
 	      e.printStackTrace();
 		}

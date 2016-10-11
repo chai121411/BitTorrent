@@ -1,5 +1,11 @@
 package GivenTools;
 
+/**
+ * @author chai1
+ * @author trw63
+ *
+ */
+
 public class Peer {
 	private String peer_id;
 	private String peer_ip;
