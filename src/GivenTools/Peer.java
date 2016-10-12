@@ -11,21 +11,28 @@ public class Peer {
 	private String peer_ip;
 	private int peer_port;
 	
-	public Peer(String id, String ip, int port){
+	public Peer(String id, String ip, int port) {
 		peer_id = id;
 		peer_ip = ip;
 		peer_port = port;
 	}
 	
-	public String getPeerID(){
+	public String getPeerID() {
 		return peer_id;
 	}
 	
-	public String getPeerIP(){
+	public String getPeerIP() {
 		return peer_ip;
 	}
 	
-	public int getPeerPort(){
+	public int getPeerPort() {
 		return peer_port;
+	}
+	
+	public void printPeer() {
+		System.out.println("---"); 
+		System.out.println("peerID: " + getPeerID());
+		System.out.println("peerIP: " + getPeerIP());
+		System.out.println("peerPort: " + getPeerPort());
 	}
 }

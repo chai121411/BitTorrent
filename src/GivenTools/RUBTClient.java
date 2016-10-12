@@ -58,7 +58,7 @@ public class RUBTClient {
 	
 	private static int interval;
 	private static List<Peer> peers;
-	private static String info_hash = null;
+	private static String info_hash = null; //Might be Bytes? idk help Terence**
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
 	
@@ -87,6 +87,11 @@ public class RUBTClient {
 		
 		//prints out the info decoded from the tracker
 		ToolKit.print(tracker_info);
+		
+		//Look at list of peers
+		for (Peer p : peers) {
+			p.printPeer();
+		}
 		
 		//Communicate with the peers
 		/*To do*/
