@@ -6,12 +6,14 @@ package GivenTools;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.Socket;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
@@ -60,9 +62,12 @@ public class RUBTClient {
 	private static int interval;
 	private static List<Peer> peers;
 	private static byte[] info_hash = null;
-	private static String peerId = null;
+	private static String generatedPeerId = null;
+	private static DataOutputStream toPeer;
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
+	private static DataInputStream fromPeer;
+	private static Socket peerSocket;
 	
 	public static void main(String[] args) {
 		String path = "src/GivenTools/newfile.txt";
@@ -90,14 +95,17 @@ public class RUBTClient {
 		//prints out the info decoded from the tracker
 		ToolKit.print(tracker_info);
 		
-		//Look at list of peers
-		for (Peer p : peers) {
-			p.printPeer();
-		}
 		
-		//Communicate with the peers
-		//Doesnt do alot yet...should return something?
-		handshakePeer();
+		byte[] handshakeHeader = null;
+		//Look at list of peers
+		for (Peer peer : peers) {
+			peer.printPeer();
+			PeerConnection pc = new PeerConnection(peer, info_hash, generatedPeerId);
+//			if (pc.checkInfoHash(peersHash)) {
+//				PeerConnection.openSocket();
+//			}
+			
+		}
 		
 		//write downloaded file to location specified by args[1]
 		/*To do*/
@@ -147,7 +155,7 @@ public class RUBTClient {
 		//creating tracker connection url
 		try {
 			peerID = generatePeerID();
-			peerId = peerID;
+			generatedPeerId = peerID;
 			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
 			System.out.println(hash);
 			info_hash = TI.info_hash.array(); //Is this right, Terence? we need to check info_hash between two peers
@@ -235,27 +243,12 @@ public class RUBTClient {
 		try {
 			header.write(fixedHeader);
 			header.write(info_hash);
-			header.write(peerId.getBytes());
+			header.write(generatedPeerId.getBytes());
 		} catch (IOException e) {
 			System.out.println("Failed to generate handshake header.");
 		}
 		
 		return header.toByteArray();
-	}
-	
-	//Maybe create another class to do handshake...? 
-	private static void handshakePeer() {
-		
-	}
-	
-	//Use Arrays.equals() if you want to compare the actual content of arrays that contain primitive types values (like byte).
-	//Checks the info_hash from torrent info and a peer
-	private static boolean checkInfoHash(byte[] peersHash) {
-		if (Arrays.equals(info_hash, peersHash)) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 		
 	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
