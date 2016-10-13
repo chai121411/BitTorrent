@@ -45,6 +45,7 @@ public class PeerMessage {
 	 * The message ID is a single decimal byte. 
 	 * The payload depends on the message.
 	 */
+	//May need a payload class?
 	public PeerMessage(int lengthPrefix, byte id) {
 		this.lengthPrefix = lengthPrefix;
 		this.id = id;
