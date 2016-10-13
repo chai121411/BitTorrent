@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.Arrays;
 /**
  * @author chai1
  * @author trw63
@@ -58,7 +59,8 @@ public class RUBTClient {
 	
 	private static int interval;
 	private static List<Peer> peers;
-	private static byte[] info_hash = null; //Might be Bytes/String? idk help Terence**
+	private static byte[] info_hash = null;
+	private static String peerId = null;
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
 	
@@ -145,6 +147,7 @@ public class RUBTClient {
 		//creating tracker connection url
 		try {
 			peerID = generatePeerID();
+			peerId = peerID;
 			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
 			System.out.println(hash);
 			info_hash = TI.info_hash.array(); //Is this right, Terence? we need to check info_hash between two peers
@@ -225,17 +228,30 @@ public class RUBTClient {
 	 * The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker. 
 	 * If the info_hash is different between two peers, then the connection is dropped.
 	 **/
-	private static void handshakePeer() {
-		//Need to declare and initialize at same time;
+	private static byte[] createHandshakeHeader() {
+		ByteArrayOutputStream header = new ByteArrayOutputStream();
 		byte[] fixedHeader = {19, 'B','i','t','T','o','r','r','e','n','t',' ', 'p','r','o','t','o','c','o','l',0,0,0,0,0,0,0,0};
 		System.out.println(fixedHeader);
-		//info_hash should contain bencoded form of info_hash?
-		/**Next is the 20-byte SHA-1 hash of the bencoded form of the info value from the metainfo (.torrent) file.**/
+		try {
+			header.write(fixedHeader);
+			header.write(info_hash);
+			header.write(peerId.getBytes());
+		} catch (IOException e) {
+			System.out.println("Failed to generate handshake header.");
+		}
+		
+		return header.toByteArray();
 	}
 	
-	//Checks the info_hash from torrent info and a peer, this may not be right... Help Terence :) are the hashes Strings or bytes?
-	private static boolean checkInfoHash(String peersHash) {
-		if (info_hash.equals(peersHash)) {
+	//Maybe create another class to do handshake...? 
+	private static void handshakePeer() {
+		
+	}
+	
+	//Use Arrays.equals() if you want to compare the actual content of arrays that contain primitive types values (like byte).
+	//Checks the info_hash from torrent info and a peer
+	private static boolean checkInfoHash(byte[] peersHash) {
+		if (Arrays.equals(info_hash, peersHash)) {
 			return true;
 		} else {
 			return false;
