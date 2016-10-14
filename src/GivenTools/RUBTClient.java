@@ -6,14 +6,12 @@ package GivenTools;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
@@ -21,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.util.Arrays;
 /**
  * @author chai1
  * @author trw63
@@ -64,7 +61,7 @@ public class RUBTClient {
 	
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
-	private static byte[] info_hash = null;
+	private static String info_hash = null;
 	private static String generatedPeerID = null;	
 
 	
@@ -97,7 +94,7 @@ public class RUBTClient {
 		//Look at list of peers
 		for (Peer peer : peers) {
 			peer.printPeer();
-			peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
+			//peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
 		}
 		
 		//write downloaded file to location specified by args[1]
@@ -150,8 +147,7 @@ public class RUBTClient {
 			peerID = generatePeerID();
 			generatedPeerID = peerID;
 			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
-			System.out.println(hash);
-			info_hash = TI.info_hash.array(); //Is this right, Terence? we need to check info_hash between two peers
+			info_hash = hash;
 			
 			getRequest = url +
 					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s", 
@@ -192,6 +188,7 @@ public class RUBTClient {
 	private static void buildPeerList(HashMap info){
 		ArrayList list = (ArrayList)info.get(KEY_PEERS);
 		peers = new ArrayList<Peer>();
+		CharSequence cs= "RU";
 		
 		for (int i = 0; i < list.size(); i++) {
 			HashMap peer_info = (HashMap)list.get(i);
@@ -201,17 +198,19 @@ public class RUBTClient {
 			String ip = new String(((ByteBuffer)peer_info.get(KEY_PEER_IP)).array());
 			int port = ((Integer)peer_info.get(KEY_PEER_PORT)).intValue();
 			
-			//creates new peer and adds him to the peer list
-			//need to implement check according to assignment
-			// use only the peers at IP address with peer_id prefix RU11
-			Peer p = new Peer(peer_id, ip, port);
-			peers.add(p);
+			//creates new peer and adds it to the peer list
+			// use only the peers with peer_id prefix RU11
+			if(peer_id.contains(cs)){
+				Peer p = new Peer(peer_id, ip, port);
+				peers.add(p);
+			}
+			
 		}
 	}
 	
 	//Generates a random peerId with length 20
 	private static String generatePeerID() {
-		String s = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		String s = "0123456789ABCDEFGHIJKLMNOPQSTVWXYZabcdefghijklmnopqstvwxyz";
 		Random r = new Random();
 		String peerID = "";
 		
