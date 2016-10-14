@@ -33,8 +33,8 @@ public class RUBTClient {
 	/**
      * Key used to retrieve the interval from the tracker 
      */
-	public final static ByteBuffer KEY_INTERVAL = 
-			ByteBuffer.wrap(new byte[]{ 'i', 'n', 't', 'e','r','v','a','l' });
+	//public final static ByteBuffer KEY_INTERVAL = 
+			//ByteBuffer.wrap(new byte[]{ 'i', 'n', 't', 'e','r','v','a','l' });
 	/**
      * Key used to retrieve the peer list from the tracker 
      */
@@ -56,7 +56,7 @@ public class RUBTClient {
 	public final static ByteBuffer KEY_PEER_IP = 
 			ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	
-	private static int interval;
+	//private static int interval;
 	private static List<Peer> peers;
 	
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
@@ -85,7 +85,7 @@ public class RUBTClient {
 		//connects to the tracker and retrieves the interval and peer list data
 		tracker_info = connectTracker(TI, url, portno);
 		
-		interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
+		//interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
 		
 		//prints out the info decoded from the tracker
@@ -199,7 +199,7 @@ public class RUBTClient {
 			int port = ((Integer)peer_info.get(KEY_PEER_PORT)).intValue();
 			
 			//creates new peer and adds it to the peer list
-			// use only the peers with peer_id prefix RU11
+			// use only the peers with peer_id prefix RU
 			if(peer_id.contains(cs)){
 				Peer p = new Peer(peer_id, ip, port);
 				peers.add(p);
