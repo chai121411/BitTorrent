@@ -17,6 +17,7 @@ public class Peer {
 	private String peer_id;
 	private String peer_ip;
 	private int peer_port;
+	private Socket peerSocket;
 	
 	public Peer(String id, String ip, int port) {
 		peer_id = id;
@@ -37,7 +38,6 @@ public class Peer {
 	}
 
 	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID) {
-		Socket peerSocket;
     	DataOutputStream toPeer;
     	DataInputStream fromPeer;
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
@@ -66,7 +66,7 @@ public class Peer {
 			
 			if (!checkHandshakeResponse(info_hash, peersHandshake)){
 				System.out.println("Peer responded with an invalid handshake.");
-				closeResources(peerSocket, toPeer, fromPeer);
+				closeResources(toPeer, fromPeer);
 				return;
 			} else {
 				System.out.println("Peer gave a response in a valid handshake format");
@@ -92,7 +92,7 @@ public class Peer {
 			
 			//Download file?
 			
-			closeResources(peerSocket, toPeer, fromPeer);
+			closeResources(toPeer, fromPeer);
 	    }
 	    catch (IOException e) {
 	        System.out.println(e);
@@ -170,7 +170,7 @@ public class Peer {
 		}
 	}
 	
-	private void closeResources(Socket peerSocket, DataOutputStream toPeer, DataInputStream fromPeer) {
+	private void closeResources(DataOutputStream toPeer, DataInputStream fromPeer) {
 		try {
 			toPeer.close();
 			fromPeer.close();
