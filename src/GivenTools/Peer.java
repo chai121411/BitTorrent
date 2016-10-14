@@ -1,5 +1,6 @@
 package GivenTools;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -47,7 +48,10 @@ public class Peer {
 		Socket peerSocket;
     	DataOutputStream toPeer;
     	DataInputStream fromPeer;
-		
+    	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    	int nRead;
+    	byte[] data = new byte[16384];
+    	
 	    try {
 	    	peerSocket = new Socket(peer_ip, peer_port);
 	    	toPeer = new DataOutputStream(peerSocket.getOutputStream());
@@ -55,6 +59,14 @@ public class Peer {
 			
 			byte[] handshakeHeader = createHandshakeHeader(info_hash, generatedPeerID);
 			//Perform handshake?
+			
+			toPeer.write(handshakeHeader);
+
+			while ((nRead = fromPeer.read(data, 0, data.length)) != -1) {
+			  buffer.write(data, 0, nRead);
+			}
+			
+			System.out.println("Response from server: " + buffer);
 	
 			//Verify hash from peer? close connection if not same
 			
