@@ -59,15 +59,19 @@ public class Peer {
 	    	toPeer = new DataOutputStream(peerSocket.getOutputStream());
 			fromPeer = new DataInputStream(peerSocket.getInputStream());
 			
-//			byte[] handshakeHeader = createHandshakeHeader(info_hash, generatedPeerID);
-			byte[] handshakeHeader = createHandshakeHeader(info_hash, peer_id); //Try with peer's id
+			byte[] handshakeHeader = createHandshakeHeader(info_hash, generatedPeerID);
+
 			//Perform handshake?
 			toPeer.write(handshakeHeader);
-			fromPeer.readFully(peersHandshake, 0, peersHandshake.length);
+			fromPeer.readFully(peersHandshake, 0, peersHandshake.length); //read fromPeer and store 68 bytes into peersHandshake
 			
 			System.out.println("What I sent.........: " + Arrays.toString(handshakeHeader));
 			System.out.println("Response from server: " + Arrays.toString(peersHandshake));
 
+			
+			//Check if peersHandshake contains the same info_hash as the one inside the tracker AND it has the same peerID has the peerID stored inside this instance of Peer!
+			//Extract info_hash and peerID out of the peersHandshake!
+			//And call isEqualByteArray(info_hash, peersHandshake.info_hash) and isEqualByteArray(peer_id, peersHandshake.peerID)
 			/**
 			 * The peer should immediately respond with his own handshake message, 
 			 * 		which takes the same form as yours.
@@ -85,10 +89,6 @@ public class Peer {
 			 *   which includes the peer_id that was registered by the peer.
 			 *   The peer_id from the tracker and in the handshake are expected to match.
 			 */
-			
-			System.out.println("call isEqualByteArray() on my handshake and peersresponse: " + isEqualByteArray(handshakeHeader, peersHandshake));
-	
-			//Verify hash from peer? close connection if not same
 			
 			//Download file?
 			
