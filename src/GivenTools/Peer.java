@@ -48,26 +48,26 @@ public class Peer {
 		Socket peerSocket;
     	DataOutputStream toPeer;
     	DataInputStream fromPeer;
-    	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    	int nRead;
-    	byte[] data = new byte[16384];
+    	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
+    	
+    	System.out.println();
+    	System.out.println("Inside tryHandshakeAndDownload in Peer.java...");
+    	System.out.println();
     	
 	    try {
 	    	peerSocket = new Socket(peer_ip, peer_port);
 	    	toPeer = new DataOutputStream(peerSocket.getOutputStream());
 			fromPeer = new DataInputStream(peerSocket.getInputStream());
 			
-			byte[] handshakeHeader = createHandshakeHeader(info_hash, generatedPeerID);
+//			byte[] handshakeHeader = createHandshakeHeader(info_hash, generatedPeerID);
+			byte[] handshakeHeader = createHandshakeHeader(info_hash, peer_id); //Try with peer's id
 			//Perform handshake?
-			
 			toPeer.write(handshakeHeader);
+			fromPeer.readFully(peersHandshake, 0, peersHandshake.length);
+			
+			System.out.println("What I sent.........: " + Arrays.toString(handshakeHeader));
+			System.out.println("Response from server: " + Arrays.toString(peersHandshake));
 
-			while ((nRead = fromPeer.read(data, 0, data.length)) != -1) {
-				buffer.write(data, 0, nRead);
-			}
-			
-			System.out.println("Response from server: " + buffer.toByteArray());
-			
 			/**
 			 * The peer should immediately respond with his own handshake message, 
 			 * 		which takes the same form as yours.
@@ -77,8 +77,16 @@ public class Peer {
 			 * 
 			 * When serving files, you should check the incoming peer’s handshake to verify that the info_hash
 			 * 		matches one that you are serving and close the connection if not.
+			 * 
+			 * 
+			 * This is from wiki: If the initiator of the connection receives a handshake in which the peer_id does not match the expected peerid,
+			 *  then the initiator is expected to drop the connection.
+			 *   Note that the initiator presumably received the peer information from the tracker, 
+			 *   which includes the peer_id that was registered by the peer.
+			 *   The peer_id from the tracker and in the handshake are expected to match.
 			 */
-
+			
+			System.out.println("call isEqualByteArray() on my handshake and peersresponse: " + isEqualByteArray(handshakeHeader, peersHandshake));
 	
 			//Verify hash from peer? close connection if not same
 			
@@ -104,11 +112,12 @@ public class Peer {
 	private byte[] createHandshakeHeader(byte[] info_hash, String generatedPeerID) {
 		ByteArrayOutputStream header = new ByteArrayOutputStream();
 		byte[] fixedHeader = {19, 'B','i','t','T','o','r','r','e','n','t',' ', 'p','r','o','t','o','c','o','l',0,0,0,0,0,0,0,0};
-
+		
 		try {
 			header.write(fixedHeader);
 			header.write(info_hash);
 			header.write(generatedPeerID.getBytes());
+//			System.out.println(Arrays.toString(header.toByteArray()));
 		} catch (IOException e) {
 			System.out.println("Failed to generate handshake header.");
 		}
@@ -122,10 +131,17 @@ public class Peer {
 		
 	}
 	
+	public boolean checkHandshakeResponse(byte[] info_hash, String generatedPeerID, byte[] peersHandshake) {
+		byte[] peersHeader;
+		byte[] peersInfoHash;
+		byte[] peersID;
+		return false;
+	}
+	
 	//Use Arrays.equals() if you want to compare the actual content of arrays that contain primitive types values (like byte).
-	//Checks the info_hash from torrent info and a peer
-	public boolean checkInfoHash(byte[] info_hash, byte[] peersHash) {
-		if (Arrays.equals(info_hash, peersHash)) {
+	//Checks if two byte arrays are equal
+	public boolean isEqualByteArray(byte[] b1, byte[] b2) {
+		if (Arrays.equals(b1, b2)) {
 			return true;
 		} else {
 			return false;
