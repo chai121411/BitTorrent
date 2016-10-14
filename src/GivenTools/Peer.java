@@ -67,6 +67,18 @@ public class Peer {
 			}
 			
 			System.out.println("Response from server: " + buffer.toByteArray());
+			
+			/**
+			 * The peer should immediately respond with his own handshake message, 
+			 * 		which takes the same form as yours.
+			 * If you received a peer_id in your tracker response,
+			 * 		you should check that the peer_id provided by the peer in the handshake matches what you expect.
+			 * If it does not, you should close the connection
+			 * 
+			 * When serving files, you should check the incoming peer’s handshake to verify that the info_hash
+			 * 		matches one that you are serving and close the connection if not.
+			 */
+
 	
 			//Verify hash from peer? close connection if not same
 			
