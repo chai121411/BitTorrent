@@ -61,7 +61,7 @@ public class RUBTClient {
 	
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
-	private static String info_hash = null;
+	private static byte[] info_hash = null;
 	private static String generatedPeerID = null;	
 
 	
@@ -94,7 +94,7 @@ public class RUBTClient {
 		//Look at list of peers
 		for (Peer peer : peers) {
 			peer.printPeer();
-			//peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
+			peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
 		}
 		
 		//write downloaded file to location specified by args[1]
@@ -147,7 +147,7 @@ public class RUBTClient {
 			peerID = generatePeerID();
 			generatedPeerID = peerID;
 			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
-			info_hash = hash;
+			info_hash = TI.info_hash.array();
 			
 			getRequest = url +
 					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s", 

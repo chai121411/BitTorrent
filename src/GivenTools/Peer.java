@@ -63,15 +63,19 @@ public class Peer {
 			toPeer.write(handshakeHeader);
 
 			while ((nRead = fromPeer.read(data, 0, data.length)) != -1) {
-			  buffer.write(data, 0, nRead);
+				buffer.write(data, 0, nRead);
 			}
 			
-			System.out.println("Response from server: " + buffer);
+			System.out.println("Response from server: " + buffer.toByteArray());
 	
 			//Verify hash from peer? close connection if not same
 			
 			//Download file?
-	    }	
+			
+			toPeer.close();
+	    	fromPeer.close();
+	    	peerSocket.close();
+	    }
 	    catch (IOException e) {
 	        System.out.println(e);
 	    }
@@ -88,7 +92,7 @@ public class Peer {
 	private byte[] createHandshakeHeader(byte[] info_hash, String generatedPeerID) {
 		ByteArrayOutputStream header = new ByteArrayOutputStream();
 		byte[] fixedHeader = {19, 'B','i','t','T','o','r','r','e','n','t',' ', 'p','r','o','t','o','c','o','l',0,0,0,0,0,0,0,0};
-		System.out.println(fixedHeader);
+
 		try {
 			header.write(fixedHeader);
 			header.write(info_hash);
