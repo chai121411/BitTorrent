@@ -16,9 +16,11 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+
 /**
  * @author chai1
  * @author trw63
@@ -97,6 +99,7 @@ public class RUBTClient {
 			peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
 		}
 		
+		System.out.println(Arrays.toString(TI.piece_hashes));
 		//write downloaded file to location specified by args[1]
 		/*To do*/
 	}
