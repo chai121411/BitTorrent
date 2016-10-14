@@ -1,5 +1,9 @@
 package GivenTools;
-
+/**
+ * @author mxc3
+ * @author trw63
+ * 
+ */
 public class PeerMessage {
 	
 	private int lengthPrefix;

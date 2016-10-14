@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.util.Arrays;
 
 /**
- * @author chai1
+ * @author mxc3
  * @author trw63
  *
  */
@@ -18,13 +18,6 @@ public class Peer {
 	private String peer_id;
 	private String peer_ip;
 	private int peer_port;
-	
-	/**
-	 * used in openSocket()
-	 */
-//	private Socket peerSocket;
-//	private DataOutputStream toPeer;
-//	private DataInputStream fromPeer;
 	
 	public Peer(String id, String ip, int port) {
 		peer_id = id;
@@ -68,10 +61,18 @@ public class Peer {
 			System.out.println("What I sent.........: " + Arrays.toString(handshakeHeader));
 			System.out.println("Response from server: " + Arrays.toString(peersHandshake));
 
-			
 			//Check if peersHandshake contains the same info_hash as the one inside the tracker AND it has the same peerID has the peerID stored inside this instance of Peer!
 			//Extract info_hash and peerID out of the peersHandshake!
 			//And call isEqualByteArray(info_hash, peersHandshake.info_hash) and isEqualByteArray(peer_id, peersHandshake.peerID)
+			
+			if (!checkHandshakeResponse(info_hash, peersHandshake)){
+				System.out.println("Peer responded with an invalid handshake.");
+				closeResources(peerSocket, toPeer, fromPeer);
+				return;
+			} else {
+				System.out.println("Peer gave a response in a valid handshake format");
+			}
+			
 			/**
 			 * The peer should immediately respond with his own handshake message, 
 			 * 		which takes the same form as yours.
@@ -92,9 +93,7 @@ public class Peer {
 			
 			//Download file?
 			
-			toPeer.close();
-	    	fromPeer.close();
-	    	peerSocket.close();
+			closeResources(peerSocket, toPeer, fromPeer);
 	    }
 	    catch (IOException e) {
 	        System.out.println(e);
@@ -131,11 +130,35 @@ public class Peer {
 		
 	}
 	
-	public boolean checkHandshakeResponse(byte[] info_hash, String generatedPeerID, byte[] peersHandshake) {
-		byte[] peersHeader;
-		byte[] peersInfoHash;
-		byte[] peersID;
-		return false;
+	public boolean checkHandshakeResponse(byte[] info_hash, byte[] peersHandshake) {
+		byte[] fixedHeader = {19, 'B','i','t','T','o','r','r','e','n','t',' ', 'p','r','o','t','o','c','o','l',0,0,0,0,0,0,0,0}; //Used for checking
+		byte[] peersHeader = new byte[28];
+		byte[] peersInfoHash = new byte[20];
+		byte[] peersID = new byte[20];
+		
+		//From peersHandshake starting at index 0, copy 28 bytes into peersHeader starting at index 0
+		System.arraycopy(peersHandshake, 0, peersHeader, 0, 28); 
+		//Check if valid fixed header
+		if (!isEqualByteArray(fixedHeader, peersHeader)) {
+			return false;
+		}
+		
+		//From peersHandshake starting at index 28, copy 20 bytes into peersInfo starting at index 0
+		System.arraycopy(peersHandshake, 28, peersInfoHash, 0, 20);
+		if (!isEqualByteArray(info_hash, peersInfoHash)) {
+			return false;
+		}
+		
+		//From peersHandshake starting at index 48, copy 20 bytes into peersID starting at index 0
+		System.arraycopy(peersHandshake, 48, peersID, 0, 20);
+		if (!isEqualByteArray(peer_id.getBytes(), peersID)) {
+			return false;
+		}
+		
+//		System.out.println(Arrays.toString(peersHeader));
+//		System.out.println(Arrays.toString(peersInfoHash));
+//		System.out.println(Arrays.toString(peersID));
+		return true;
 	}
 	
 	//Use Arrays.equals() if you want to compare the actual content of arrays that contain primitive types values (like byte).
@@ -145,6 +168,17 @@ public class Peer {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	private void closeResources(Socket peerSocket, DataOutputStream toPeer, DataInputStream fromPeer) {
+		try {
+			toPeer.close();
+			fromPeer.close();
+			peerSocket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
