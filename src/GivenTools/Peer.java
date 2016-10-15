@@ -21,24 +21,36 @@ public class Peer {
 	private DataOutputStream toPeer;
 	private DataInputStream fromPeer;
 	
-	public Peer(String id, String ip, int port) {
+	public Peer (String id, String ip, int port) {
 		peer_id = id;
 		peer_ip = ip;
 		peer_port = port;
 	}
 	
-	public String getPeerID() {
+	public String getPeerID () {
 		return peer_id;
 	}
 	
-	public String getPeerIP() {
+	public String getPeerIP () {
 		return peer_ip;
 	}
 	
-	public int getPeerPort() {
+	public int getPeerPort () {
 		return peer_port;
 	}
 
+	public Socket getSocket () {
+		return peerSocket;
+	}
+	
+	public DataOutputStream getOutput () {
+		return toPeer;
+	}
+	
+	public DataInputStream getInput () {
+		return fromPeer;
+	}
+	
 	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID) {
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
     	
@@ -91,6 +103,10 @@ public class Peer {
 			 */
 			
 			//Download file?
+			
+			PeerMessages p = new PeerMessages();
+			p.start(this);
+			p.sendInterest();
 			
 			closeResources();
 	    }

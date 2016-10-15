@@ -1,15 +1,25 @@
 package GivenTools;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+import java.util.Arrays;
+
 public class PeerMessages {
 	
 	private boolean choking;
 	private boolean interested;
 	private Peer peer;
+	private Socket peerSocket;
+	private DataOutputStream toPeer;
+	private DataInputStream fromPeer;
+	private ByteArrayOutputStream out;
 	
 	
 	private static final byte[] keep_alive = {0,0,0,0};
 	
-	private static final byte[] length_prefix = {0,0,01};
+	private static final byte[] length_prefix = {0,0,0,1};
 	
 	/**
 	 * Key for choke message
@@ -51,7 +61,51 @@ public class PeerMessages {
 		choking = true;
 		interested = false;
 		peer = p;
+		out = new ByteArrayOutputStream();
+		peerSocket = p.getSocket();
+		toPeer = p.getOutput();
+		fromPeer = p.getInput();
+		
+		readBitfield();
 	}
+	
+	public void readBitfield () {
+		byte[] data = new byte [5];
+		
+		try {
+			fromPeer.read(data);
+			
+			int x = data[3];
+			byte[] bit = new byte[x];
+			fromPeer.read(bit);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+	
+	public void sendInterest () {
+		byte[] data = new byte[5];
+		
+		try {
+			out.flush();
+			out.write(length_prefix);
+			out.write(KEY_INTERESTED);
+			
+			
+			toPeer.write(out.toByteArray());
+			System.out.println("Sent to Peer: " + Arrays.toString(out.toByteArray()));
+			
+			fromPeer.readFully(data, 0, data.length);
+			System.out.println("Received from Peer: " + Arrays.toString(data));
+			
+			
+			
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+	
+	
 	
 	public boolean isChoking () {
 		return choking;

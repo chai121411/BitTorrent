@@ -16,7 +16,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -65,7 +64,7 @@ public class RUBTClient {
 	//If the info_hash is different between two peers, then the connection is dropped.
 	private static byte[] info_hash = null;
 	private static String generatedPeerID = null;	
-
+	private static TorrentInfo TI;
 	
 	public static void main(String[] args) {
 		String path = "src/GivenTools/newfile.txt";
@@ -73,7 +72,7 @@ public class RUBTClient {
 		String hostName = null;
 		int portno = -1;
 		HashMap tracker_info = null;
-		TorrentInfo TI = null;
+		TI = null;
 		//set args[0] ** Run -> Run Configurations -> Arguments -> {Type in args}
 		//Open the torrent file and retrieve the TorrentInfo
 		TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
@@ -99,7 +98,6 @@ public class RUBTClient {
 			peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
 		}
 		
-		System.out.println(Arrays.toString(TI.piece_hashes));
 		//write downloaded file to location specified by args[1]
 		/*To do*/
 	}
@@ -135,6 +133,10 @@ public class RUBTClient {
 	private static URL getURL(TorrentInfo TI) {
 		URL	url = TI.announce_url;
 		return url;
+	}
+	
+	public static TorrentInfo getTorrentInfo () {
+		return TI;
 	}
 	
 	private static HashMap connectTracker(TorrentInfo TI, URL url, int portno) {
