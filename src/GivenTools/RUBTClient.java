@@ -57,6 +57,9 @@ public class RUBTClient {
 	public final static ByteBuffer KEY_PEER_IP = 
 			ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	
+	//block length set to 2 ^ 14
+	public static int block_length = 16384;
+	
 	//private static int interval;
 	private static List<Peer> peers;
 	
@@ -193,7 +196,7 @@ public class RUBTClient {
 	private static void buildPeerList(HashMap info){
 		ArrayList list = (ArrayList)info.get(KEY_PEERS);
 		peers = new ArrayList<Peer>();
-		CharSequence cs= "RU";
+		CharSequence cs= "-RU";
 		
 		for (int i = 0; i < list.size(); i++) {
 			HashMap peer_info = (HashMap)list.get(i);
@@ -204,7 +207,7 @@ public class RUBTClient {
 			int port = ((Integer)peer_info.get(KEY_PEER_PORT)).intValue();
 			
 			//creates new peer and adds it to the peer list
-			// use only the peers with peer_id prefix RU
+			// use only the peers with peer_id prefix -RU
 			if(peer_id.contains(cs)){
 				Peer p = new Peer(peer_id, ip, port);
 				peers.add(p);

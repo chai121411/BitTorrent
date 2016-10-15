@@ -20,11 +20,17 @@ public class Peer {
 	private Socket peerSocket;
 	private DataOutputStream toPeer;
 	private DataInputStream fromPeer;
+	private int block_length;
+	private int blocks_per_piece;
+	private static TorrentInfo TI;
 	
 	public Peer (String id, String ip, int port) {
 		peer_id = id;
 		peer_ip = ip;
 		peer_port = port;
+		TI = RUBTClient.getTorrentInfo();
+		block_length = RUBTClient.block_length;
+		blocks_per_piece = TI.piece_length / block_length;
 	}
 	
 	public String getPeerID () {
@@ -105,8 +111,17 @@ public class Peer {
 			//Download file?
 			
 			PeerMessages p = new PeerMessages();
+			boolean result;
+			
 			p.start(this);
-			p.sendInterest();
+			result = p.showInterest();
+			
+			if (result){
+				int y = 0;
+				p.request(0, y, block_length);
+				
+				System.out.println ( Arrays.toString(p.getPiece()) );
+			}
 			
 			closeResources();
 	    }
