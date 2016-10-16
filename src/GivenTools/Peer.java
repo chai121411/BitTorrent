@@ -93,14 +93,6 @@ public class Peer {
 			/**
 			 * The peer should immediately respond with his own handshake message, 
 			 * 		which takes the same form as yours.
-			 * If you received a peer_id in your tracker response,
-			 * 		you should check that the peer_id provided by the peer in the handshake matches what you expect.
-			 * If it does not, you should close the connection
-			 * 
-			 * When serving files, you should check the incoming peer’s handshake to verify that the info_hash
-			 * 		matches one that you are serving and close the connection if not.
-			 * 
-			 * 
 			 * This is from wiki: If the initiator of the connection receives a handshake in which the peer_id does not match the expected peerid,
 			 *  then the initiator is expected to drop the connection.
 			 *   Note that the initiator presumably received the peer information from the tracker, 
@@ -116,11 +108,13 @@ public class Peer {
 			p.start(this);
 			result = p.showInterest();
 			
-			if (result){
+			if (result) {
 				int y = 0;
-				p.request(0, y, block_length);
+//				p.request(0, y, block_length);
+				//<length> is typically 2^14 (16384) bytes. 
+				p.request(0, y, 16384);
 				
-				System.out.println ( Arrays.toString(p.getPiece()) );
+				System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
 			}
 			
 			closeResources();

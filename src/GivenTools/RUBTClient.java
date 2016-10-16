@@ -70,12 +70,13 @@ public class RUBTClient {
 	private static TorrentInfo TI;
 	
 	public static void main(String[] args) {
-		String path = "src/GivenTools/newfile.txt";
+		String path = "src/GivenTools/newfile.mp4";
 		URL url = null;
 		String hostName = null;
 		int portno = -1;
 		HashMap tracker_info = null;
 		TI = null;
+		
 		//set args[0] ** Run -> Run Configurations -> Arguments -> {Type in args}
 		//Open the torrent file and retrieve the TorrentInfo
 		TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
@@ -103,6 +104,7 @@ public class RUBTClient {
 		
 		//write downloaded file to location specified by args[1]
 		/*To do*/
+		
 	}
 	
 	//Gets TorrentInfo from torrent file
@@ -229,11 +231,11 @@ public class RUBTClient {
 	}
 		
 	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
-	private static void writeToFile(String path) {
+	private static void writeToFile(byte[] bytes, String path) {
 		try {
 			File file = new File(path);
-			String hello = "Hello World \n Hi";
-			byte[] bytes = hello.getBytes();
+			
+			System.out.println("Writing to new file");
 			
 			FileOutputStream stream = new FileOutputStream(file);
 			try {

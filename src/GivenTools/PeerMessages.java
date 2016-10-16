@@ -73,17 +73,17 @@ public class PeerMessages {
 			out.write(ByteBuffer.allocate(4).putInt(length).array());
 			
 			toPeer.write(out.toByteArray());
-			System.out.println(Arrays.toString(out.toByteArray()));
+			System.out.println("toPeer Request in PeerMessages: " + Arrays.toString(out.toByteArray()));
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 	}
 	
 	public byte[] getPiece () {
-		byte[] data = new byte [5];
+		byte[] data = new byte [16384];
 		
 		try {
-			fromPeer.read(data);
+			fromPeer.readFully(data);
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -122,7 +122,6 @@ public class PeerMessages {
 	
 	public boolean showInterest () {
 		byte[] data = new byte[5];
-		
 		try {
 			out.flush();
 			out.write(length_prefix);
@@ -130,6 +129,9 @@ public class PeerMessages {
 			
 			toPeer.write(out.toByteArray());
 			fromPeer.readFully(data, 0, data.length);
+			
+			//Server sent back the choke message
+			System.out.println("Response to interest " + Arrays.toString(data));
 			
 			out.reset();
 			out.write(length_prefix);
@@ -140,7 +142,6 @@ public class PeerMessages {
 				interested = true;
 				peer_choking = false;
 				peer_interested = true;
-				
 				return true;
 			}
 			
