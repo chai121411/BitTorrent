@@ -56,7 +56,6 @@ public class PeerMessages {
 	 */
 	private static final int KEY_REQUEST = 6;
 	
-	
 	public void start (Peer p) {
 		choking = true;
 		interested = false;
@@ -106,6 +105,17 @@ public class PeerMessages {
 	public byte[] getPiece () {
 //		byte[] data = new byte [5];
 		byte[] data = new byte [16384]; //?
+		
+		//9+X length prefix??
+		
+		/**
+		 * piece: <len=0009+X><id=7><index><begin><block>
+		 * The piece message is variable length, where X is the length of the block. The payload contains the following information:
+		
+		 * index: integer specifying the zero-based piece index
+		 * begin: integer specifying the zero-based byte offset within the piece
+		 * block: block of data, which is a subset of the piece specified by index.
+		 */
 		
 		try {
 			fromPeer.readFully(data);

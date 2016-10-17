@@ -57,7 +57,6 @@ public class RUBTClient {
 	public final static ByteBuffer KEY_PEER_IP = 
 			ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	
-	
 	//block length set to 2 ^ 14
 	public static int block_length = 16384;
 	
@@ -67,8 +66,10 @@ public class RUBTClient {
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
 	private static byte[] info_hash = null;
-	private static String generatedPeerID = null;	
+	private static String generatedPeerID = null;
+	private static ByteBuffer[] piece_hashes = null; //The SHA-1 hash of each piece!
 	private static TorrentInfo TI;
+	
 	
 	public static void main(String[] args) {
 		String path = "src/GivenTools/newfile.mp4";
@@ -89,7 +90,11 @@ public class RUBTClient {
 		System.out.println(portno);
 		
 		System.out.println(TI.piece_length);
-		System.out.println(TI.piece_hashes.length);
+		System.out.println(TI.piece_hashes); //?
+ 		System.out.println(TI.piece_hashes.length); //"Our download time is quite long for all 511 pieces." -Sakai forums, this could be it! ***
+		//May need these piece_hashes to do the SHA-1 verification to check the piece downloaded...
+		
+ 		piece_hashes = TI.piece_hashes;
 		
 		//connects to the tracker and retrieves the interval and peer list data
 		tracker_info = connectTracker(TI, url, portno);
@@ -104,6 +109,7 @@ public class RUBTClient {
 		for (Peer peer : peers) {
 			peer.printPeer();
 			peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
+			//Pass piece_hashes to verify SHA-1 of each download for each piece, did not do it yet*
 		}
 		
 		//write downloaded file to location specified by args[1]
