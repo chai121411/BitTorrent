@@ -129,12 +129,12 @@ public class PeerMessages {
 			fromPeer.readFully(data);
 			int expected_len = getBytesAsInt(data, 0) - 9; //9 + X, Offset 0
 			System.out.println("Expected len of block: " + expected_len);
-//			System.out.println(Arrays.toString(data));
+			System.out.println(Arrays.toString(data));
 
 			int index = getBytesAsInt(data, 5); //Offset 5
 			System.out.println("Received piece Index: " + index);
 			block = new byte[expected_len];
-			
+
 			//From data starting at index 13, copy length bytes into block starting at index 0, return this block		
 			System.arraycopy(data, 13, block, 0, expected_len);
 			
@@ -144,6 +144,8 @@ public class PeerMessages {
 		
 		return block;
 	}
+	
+	
 	
 	//starting at index x, copy 4 bytes into buffer from data and get the integer represented by these 4 bytes
 	private int getBytesAsInt(byte[] data, int x) {

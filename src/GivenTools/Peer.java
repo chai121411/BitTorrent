@@ -11,6 +11,8 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
@@ -153,12 +155,43 @@ public class Peer {
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
 					System.out.println("Requesting piece index: " + i);
  					p.request(i, 0, block_length);
-					System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
+ 					byte[] resultingPiece = p.getPiece();
+					System.out.println ("getPiece result: " + Arrays.toString(resultingPiece) );
+					
 					//VERIFY SHA-1 HASH
+					/** 
+					 *  has an SHA1 hash for each piece of the file and the pieces are verified as the finish downloading, 
+					 *  and are discarded if they fail to match the hash, indicating something wrong was transmitted to you.
+					 *  
+					 **  The MessageDigest class provides the functionality of a message digest algorithm, such as MD5 or SHA. 
+					 *  Message digests are secure one-way hash functions that take arbitrary-sized data and output a fixed-length hash value.
+					 *	
+					 * getInstance(String)
+					Generates a MessageDigest object that implements the specified digest algorithm.	
+					
+					 *  public byte[] digest(byte input[])
+					Performs a final update on the digest using the specified array of bytes, then completes the digest computation. That is, this method first calls update on the array, then calls digest().
+						Parameters:
+							input - the input to be updated before the digest is completed.
+						Returns:
+							the array of bytes for the resulting hash value.
+					
+					 * isEqual(byte[], byte[])
+					Compares two digests for equality.
+					
+					If not equal, resend request
+					 */
+					byte[] SHA1digest = digestToSHA1(resultingPiece);
+					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
+						System.out.println("Piece " + i +" verified");
+					} else {
+						System.out.println("Piece " + i +" IS NOT verified");
+					}
 					
 					//SEND HAVE MESSAGE?
 					System.out.println("-------");
 				}
+				//write to file??
 			}
 			
 			closeResources();
@@ -166,6 +199,32 @@ public class Peer {
 	    catch (IOException e) {
 	    	System.err.println("Could not perform handshake and download file: " + e);
 	    }
+	}
+	
+	private byte[] digestToSHA1(byte[] buffer) {
+		
+		MessageDigest md = null;
+		try {
+			md = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			System.err.println("Failed to convert bytes to SHA-1: " + e);
+		}
+		
+		md.update(buffer);
+		byte[] digest = md.digest(); //SHA-1 bytes
+		
+		return digest;
+	}
+	
+	//digestToSHA1 then compare with piece_hash...
+	private boolean isEqualSHA1(byte[] piece_hash, byte[] downloaded_hash) {
+		System.out.println(Arrays.toString(piece_hash));
+		System.out.println(Arrays.toString(downloaded_hash));
+		if (MessageDigest.isEqual(piece_hash, downloaded_hash)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	//you need to contact the tracker and let it know you are STARTING the download
