@@ -154,10 +154,18 @@ public class Peer {
 				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
 					System.out.println("Requesting piece index: " + i);
- 					p.request(i, 0, block_length);
- 					byte[] resultingPiece = p.getPiece();
-					System.out.println ("getPiece result: " + Arrays.toString(resultingPiece) );
+					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
+					int x = 0;
 					
+					// gets all the blocks that make up a given piece
+					for(int j = 0; j < blocks_per_piece; j++){
+	 					p.request(i, x, block_length);
+	 					byte[] resultingPiece = p.getPiece();
+	 					x+= block_length;
+						piece.write(resultingPiece);	
+					}
+					
+					//System.out.println ("getPiece result: " + Arrays.toString(piece.toByteArray()) );
 					//VERIFY SHA-1 HASH
 					/** 
 					 *  has an SHA1 hash for each piece of the file and the pieces are verified as the finish downloading, 
@@ -181,11 +189,12 @@ public class Peer {
 					
 					If not equal, resend request
 					 */
-					byte[] SHA1digest = digestToSHA1(resultingPiece);
+					byte[] SHA1digest = digestToSHA1(piece.toByteArray());
 					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
 						System.out.println("Piece " + i +" verified");
 					} else {
 						System.out.println("Piece " + i +" IS NOT verified");
+						return;
 					}
 					
 					//SEND HAVE MESSAGE?

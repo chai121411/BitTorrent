@@ -77,7 +77,7 @@ public class PeerMessages {
 			out.reset();
 			out.write(have_prefix);
 			out.write(KEY_HAVE);
-			out.write(index); //Not sure if you can write index
+			out.write(ByteBuffer.allocate(4).putInt(index).array()); //I think this is how you write the index 
 			
 			toPeer.write(out.toByteArray());
 			System.out.println("sendHaving: " + Arrays.toString(out.toByteArray()));
@@ -98,7 +98,7 @@ public class PeerMessages {
 			out.write(ByteBuffer.allocate(4).putInt(length).array());
 			
 			toPeer.write(out.toByteArray());
-			System.out.println("toPeer Request in PeerMessages: " + Arrays.toString(out.toByteArray()));
+			//System.out.println("toPeer Request in PeerMessages: " + Arrays.toString(out.toByteArray()));
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -128,11 +128,11 @@ public class PeerMessages {
 		try {
 			fromPeer.readFully(data);
 			int expected_len = getBytesAsInt(data, 0) - 9; //9 + X, Offset 0
-			System.out.println("Expected len of block: " + expected_len);
-			System.out.println(Arrays.toString(data));
+			//System.out.println("Expected len of block: " + expected_len);
+			//System.out.println(Arrays.toString(data));
 
 			int index = getBytesAsInt(data, 5); //Offset 5
-			System.out.println("Received piece Index: " + index);
+			//System.out.println("Received piece Index: " + index);
 			block = new byte[expected_len];
 
 			//From data starting at index 13, copy length bytes into block starting at index 0, return this block		
