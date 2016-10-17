@@ -143,7 +143,9 @@ public class Peer {
 				
 				for (int i = 0; i < piece_hashes.length; i++) {
 					p.request(0, i, block_length);
+					System.out.println("Piece index: " + i);
 					System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
+					System.out.println("-------");
 				}
 			}
 			
