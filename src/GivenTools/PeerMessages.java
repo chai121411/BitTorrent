@@ -21,7 +21,10 @@ public class PeerMessages {
 	
 	private static final byte[] length_prefix = {0,0,0,1};
 	
+	private static final byte[] have_prefix = {0,0,0,5};
+	
 	private static final byte[] request_length = {0,0,0,13};
+
 	
 	/**
 	 * Key for choke message
@@ -44,6 +47,11 @@ public class PeerMessages {
 	private static final int KEY_UNINTERESTED = 3;
 	
 	/**
+	 * Key for have message, verifies piece downloaded
+	 */
+	private static final int KEY_HAVE = 4;
+	
+	/**
 	 * Key for request message
 	 */
 	private static final int KEY_REQUEST = 6;
@@ -59,6 +67,22 @@ public class PeerMessages {
 		fromPeer = p.getInput();
 		
 		readBitfield();
+	}
+	
+	
+    //have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
+	public void sendHave(int index) {
+		try {
+			out.reset();
+			out.write(have_prefix);
+			out.write(KEY_HAVE);
+			out.write(index); //Not sure if you can write index
+			
+			toPeer.write(out.toByteArray());
+			System.out.println("sendHaving: " + Arrays.toString(out.toByteArray()));
+		} catch (Exception e) {
+			System.out.println(e);
+		}
 	}
 	
 	public void request (int index, int begin, int length){
@@ -80,7 +104,8 @@ public class PeerMessages {
 	}
 	
 	public byte[] getPiece () {
-		byte[] data = new byte [16384];
+//		byte[] data = new byte [5];
+		byte[] data = new byte [16384]; //?
 		
 		try {
 			fromPeer.readFully(data);

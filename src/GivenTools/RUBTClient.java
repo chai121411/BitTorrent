@@ -57,6 +57,7 @@ public class RUBTClient {
 	public final static ByteBuffer KEY_PEER_IP = 
 			ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	
+	
 	//block length set to 2 ^ 14
 	public static int block_length = 16384;
 	
@@ -86,6 +87,9 @@ public class RUBTClient {
 		portno = url.getPort();
 		System.out.println(hostName);
 		System.out.println(portno);
+		
+		System.out.println(TI.piece_length);
+		System.out.println(TI.piece_hashes.length);
 		
 		//connects to the tracker and retrieves the interval and peer list data
 		tracker_info = connectTracker(TI, url, portno);

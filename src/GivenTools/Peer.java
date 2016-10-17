@@ -91,29 +91,37 @@ public class Peer {
 			}
 			
 			/**
-			 * The peer should immediately respond with his own handshake message, 
-			 * 		which takes the same form as yours.
-			 * This is from wiki: If the initiator of the connection receives a handshake in which the peer_id does not match the expected peerid,
-			 *  then the initiator is expected to drop the connection.
-			 *   Note that the initiator presumably received the peer information from the tracker, 
-			 *   which includes the peer_id that was registered by the peer.
-			 *   The peer_id from the tracker and in the handshake are expected to match.
+			 * The peer should immediately respond with his own handshake message, which takes the same form as yours. Otherwise drop connection.
 			 */
 			
 			//Download file?
-			
 			PeerMessages p = new PeerMessages();
 			boolean result;
 			
 			p.start(this);
 			result = p.showInterest();
 			
+/**
+ *  It is likely that at least the last block of the last piece will be smaller than the block request size 
+ *  (and the last piece smaller than the piece_length) 
+ *  because the total torrent length is unlikely to be evenly divisible by the piece size.
+ *  You will need to take this into account when requesting the end of the torrent
+ */
+			//unchoked and interested, can download file
 			if (result) {
-				int y = 0;
-//				p.request(0, y, block_length);
-				//<length> is typically 2^14 (16384) bytes. 
-				p.request(0, y, 16384);
+				/*Do a loop to request all the pieces...
+				**For the number of pieces needed to download the file??????? HOW MANY PIECES DO WE NEED???????????????????????????????????????????
+		
+					*Find piece length you need to download for the current piece index, apparently only the last piece has a different piece length
+					*Make a request to the peer with this piece index, piece length 
+					*(request: <len prefix> is 13 and msg ID is 6. The payload: <index><begin><length> 
 				
+					*Write to peer that you "have" this piece. (verify the piece download with the piece_index just downloaded, PeerMessage.sendHave(piece_index)).
+			    	*have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
+				*/
+				
+				int y = 0;
+				p.request(0, y, block_length);
 				System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
 			}
 			
