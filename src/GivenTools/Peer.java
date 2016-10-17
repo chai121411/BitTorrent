@@ -32,6 +32,8 @@ public class Peer {
 	private int blocks_per_piece;
 	private static TorrentInfo TI;
 	
+	private static int last_piece_length; 
+	
 	public Peer (String id, String ip, int port) {
 		peer_id = id;
 		peer_ip = ip;
@@ -39,6 +41,9 @@ public class Peer {
 		TI = RUBTClient.getTorrentInfo();
 		block_length = RUBTClient.block_length;
 		blocks_per_piece = TI.piece_length / block_length;
+		
+		//calculates the length of the last piece
+		last_piece_length = TI.file_length - ((TI.piece_hashes.length-1) * blocks_per_piece * block_length );
 	}
 	
 	public String getPeerID () {
@@ -152,19 +157,38 @@ public class Peer {
 				//you need to contact the tracker and let it know you are starting to download.
 				contactTrackerWithStartedEvent();
 				
-				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
+				for (int i = 509; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
 					System.out.println("Requesting piece index: " + i);
 					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
 					int x = 0;
 					
-					// gets all the blocks that make up a given piece
-					for(int j = 0; j < blocks_per_piece; j++){
-	 					p.request(i, x, block_length);
-	 					byte[] resultingPiece = p.getPiece();
-	 					x+= block_length;
-						piece.write(resultingPiece);	
-					}
+					if(i+1 == piece_hashes.length){
+						
+						int temp = last_piece_length;
+						
+						while(temp > 0){
+							
+							if(temp > block_length)
+								p.request(i, x, block_length);
+							else
+								p.request(i, x, temp);
+							
+							temp -= block_length;
+							byte[] resultingPiece = p.getPiece();
+		 					x+= block_length;
+							piece.write(resultingPiece);	
+						}
+						
+					}else{
 					
+						// gets all the blocks that make up a given piece
+						for(int j = 0; j < blocks_per_piece; j++){
+		 					p.request(i, x, block_length);
+		 					byte[] resultingPiece = p.getPiece();
+		 					x+= block_length;
+							piece.write(resultingPiece);	
+						}
+					}
 					//System.out.println ("getPiece result: " + Arrays.toString(piece.toByteArray()) );
 					//VERIFY SHA-1 HASH
 					/** 

@@ -60,7 +60,7 @@ public class RUBTClient {
 			ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	
 	//block length set to 2 ^ 14
-	public static int block_length = 16384;
+	public static final int block_length = 16384;
 	
 	//private static int interval;
 	private static List<Peer> peers;
