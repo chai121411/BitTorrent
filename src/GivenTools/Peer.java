@@ -156,25 +156,28 @@ public class Peer {
 				//The first time you begin the download,
 				//you need to contact the tracker and let it know you are starting to download.
 				contactTrackerWithStartedEvent();
-				
-				for (int i = 509; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
-					System.out.println("Requesting piece index: " + i);
+				 	
+				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
+					System.out.println("Requesting piece index: " + (i+1));
 					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
 					int x = 0;
 					
 					if(i+1 == piece_hashes.length){
 						
 						int temp = last_piece_length;
+						byte[] resultingPiece;
 						
 						while(temp > 0){
 							
-							if(temp > block_length)
+							if(temp > block_length){
 								p.request(i, x, block_length);
-							else
+								resultingPiece = p.getPiece(block_length);
+							}else{
 								p.request(i, x, temp);
+								 resultingPiece= p.getPiece(temp);
+							}
 							
 							temp -= block_length;
-							byte[] resultingPiece = p.getPiece();
 		 					x+= block_length;
 							piece.write(resultingPiece);	
 						}
@@ -184,7 +187,7 @@ public class Peer {
 						// gets all the blocks that make up a given piece
 						for(int j = 0; j < blocks_per_piece; j++){
 		 					p.request(i, x, block_length);
-		 					byte[] resultingPiece = p.getPiece();
+		 					byte[] resultingPiece = p.getPiece(block_length);
 		 					x+= block_length;
 							piece.write(resultingPiece);	
 						}
@@ -215,9 +218,9 @@ public class Peer {
 					 */
 					byte[] SHA1digest = digestToSHA1(piece.toByteArray());
 					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
-						System.out.println("Piece " + i +" verified");
+						System.out.println("Piece " + (i+1) +" verified");
 					} else {
-						System.out.println("Piece " + i +" IS NOT verified");
+						System.out.println("Piece " + (i+1) +" IS NOT verified");
 						return;
 					}
 					

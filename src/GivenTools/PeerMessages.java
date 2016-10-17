@@ -104,8 +104,8 @@ public class PeerMessages {
 		}
 	}
 	
-	public byte[] getPiece () throws IOException {
-		byte[] data = new byte [16384+13];
+	public byte[] getPiece (int block_length) throws IOException {
+		byte[] data = new byte [block_length + 13];
 		byte[] block = null;
 		
 		//9+X length prefix??
@@ -128,7 +128,7 @@ public class PeerMessages {
 		try {
 			fromPeer.readFully(data);
 			int expected_len = getBytesAsInt(data, 0) - 9; //9 + X, Offset 0
-			System.out.println("Expected len of block: " + expected_len);
+			//System.out.println("Expected len of block: " + expected_len);
 			//System.out.println(Arrays.toString(data));
 
 			int index = getBytesAsInt(data, 5); //Offset 5
