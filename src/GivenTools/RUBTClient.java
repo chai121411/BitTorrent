@@ -11,7 +11,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
@@ -115,6 +117,14 @@ public class RUBTClient {
 		//write downloaded file to location specified by args[1]
 		/*To do*/
 		
+	    //8.    When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
+		try {
+			contactTrackerWithCompletedEvent();
+		} catch (MalformedURLException e) {
+			System.err.println("Could not contact tracker with completed event.");
+		}
+
+		
 	}
 	
 	//Gets TorrentInfo from torrent file
@@ -148,6 +158,10 @@ public class RUBTClient {
 	private static URL getURL(TorrentInfo TI) {
 		URL	url = TI.announce_url;
 		return url;
+	}
+	
+	public static String getGeneratedPeerID() {
+		return generatedPeerID;
 	}
 	
 	public static TorrentInfo getTorrentInfo () {
@@ -202,6 +216,7 @@ public class RUBTClient {
 			System.exit(1);
 		}
 		
+		
 		return decode;
 	}
 	
@@ -239,7 +254,34 @@ public class RUBTClient {
 		
 		return peerID;
 	}
+	
+	//you need to contact the tracker and let it know you are completing the download
+	private static void contactTrackerWithCompletedEvent() throws MalformedURLException {
+		URL url = TI.announce_url; 
+		int portno = url.getPort();
+		URL tracker = null;
+		String getRequest = null;
+		HttpURLConnection tracker_connect = null;
+		String hash = null;
 		
+		try {
+			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
+			getRequest = url +
+					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=%s&left=0&event=completed", //**"completed"**
+					hash, RUBTClient.getGeneratedPeerID(), portno, TI.file_length);
+			tracker = new URL(getRequest);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			tracker_connect = (HttpURLConnection)tracker.openConnection();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return;
+	}
+	
 	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
 	private static void writeToFile(byte[] bytes, String path) {
 		try {

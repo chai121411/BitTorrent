@@ -4,7 +4,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -141,6 +146,10 @@ public class Peer {
 			    	*have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
 				*/
 				
+				//The first time you begin the download,
+				//you need to contact the tracker and let it know you are starting to download.
+				contactTrackerWithStartedEvent();
+				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
 					System.out.println("Requesting piece index: " + i);
  					p.request(i, 0, block_length);
@@ -155,8 +164,35 @@ public class Peer {
 			closeResources();
 	    }
 	    catch (IOException e) {
-	        System.out.println(e);
+	    	System.err.println("Could not perform handshake and download file: " + e);
 	    }
+	}
+	
+	//you need to contact the tracker and let it know you are STARTING the download
+	private void contactTrackerWithStartedEvent() throws MalformedURLException {
+		URL url = TI.announce_url; 
+		int portno = url.getPort();
+		URL tracker = null;
+		String getRequest = null;
+		HttpURLConnection tracker_connect = null;
+		String hash = null;
+		
+		try {
+			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
+			getRequest = url +
+					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s&event=started", //**"started"**
+					hash, RUBTClient.getGeneratedPeerID(), portno, TI.file_length);
+			tracker = new URL(getRequest);
+		} catch (UnsupportedEncodingException e) {
+			System.err.println("Could not contact tracker with started event: " + e);
+		}
+		
+		try {
+			tracker_connect = (HttpURLConnection)tracker.openConnection();
+		} catch (IOException e) {
+			System.err.println("Could not contact tracker with started event: " + e);
+		}
+		return;
 	}
 	
 	/**
@@ -181,12 +217,6 @@ public class Peer {
 		}
 		
 		return header.toByteArray();
-	}
-	
-	//Maybe create another class to do handshake...? 
-	@SuppressWarnings("unused")
-	private void handshakePeer() {
-		
 	}
 	
 	public boolean checkHandshakeResponse(byte[] info_hash, byte[] peersHandshake) {
