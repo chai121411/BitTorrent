@@ -88,12 +88,12 @@ public class RUBTClient {
 		//Get the host and portno by using the TorrentInfo
 		hostName = url.getHost();
 		portno = url.getPort();
-		System.out.println(hostName);
-		System.out.println(portno);
+		//System.out.println(hostName);
+		//System.out.println(portno);
 		
-		System.out.println(TI.piece_length);
-		System.out.println(TI.piece_hashes); //?
- 		System.out.println(TI.piece_hashes.length); //"Our download time is quite long for all 511 pieces." -Sakai forums, this could be it! ***
+		//System.out.println(TI.piece_length);
+		//System.out.println(TI.piece_hashes); //?
+ 		//System.out.println(TI.piece_hashes.length); //"Our download time is quite long for all 511 pieces." -Sakai forums, this could be it! ***
 		//May need these piece_hashes to do the SHA-1 verification to check the piece downloaded...
 		
  		piece_hashes = TI.piece_hashes;
@@ -105,11 +105,11 @@ public class RUBTClient {
 		buildPeerList(tracker_info);
 		
 		//prints out the info decoded from the tracker
-		ToolKit.print(tracker_info);
+		//ToolKit.print(tracker_info);
 		
 		//Look at list of peers
 		for (Peer peer : peers) {
-			peer.printPeer();
+			//peer.printPeer();
 			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes); //Pass info_hash and generatedpeerid to create handshakeheader
 			//Pass piece_hashes to verify SHA-1 of each download for each piece, did not do it yet*
 		}

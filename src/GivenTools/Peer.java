@@ -83,8 +83,8 @@ public class Peer {
 			toPeer.write(handshakeHeader);
 			fromPeer.readFully(peersHandshake, 0, peersHandshake.length); //read fromPeer and store 68 bytes into peersHandshake
 			
-			System.out.println("What I sent.........: " + Arrays.toString(handshakeHeader));
-			System.out.println("Response from server: " + Arrays.toString(peersHandshake));
+			//System.out.println("What I sent.........: " + Arrays.toString(handshakeHeader));
+			//System.out.println("Response from server: " + Arrays.toString(peersHandshake));
 
 			//Check if peersHandshake contains the same info_hash as the one inside the tracker AND it has the same peerID has the peerID stored inside this instance of Peer!
 			//Extract info_hash and peerID out of the peersHandshake!
@@ -95,7 +95,7 @@ public class Peer {
 				closeResources();
 				return;
 			} else {
-				System.out.println("Peer gave a response in a valid handshake format");
+				System.out.println("Peer gave a response in a valid handshake format + \n");
 			}
 			
 			/**
@@ -227,8 +227,8 @@ public class Peer {
 	
 	//digestToSHA1 then compare with piece_hash...
 	private boolean isEqualSHA1(byte[] piece_hash, byte[] downloaded_hash) {
-		System.out.println(Arrays.toString(piece_hash));
-		System.out.println(Arrays.toString(downloaded_hash));
+		//System.out.println(Arrays.toString(piece_hash));
+		//System.out.println(Arrays.toString(downloaded_hash));
 		if (MessageDigest.isEqual(piece_hash, downloaded_hash)) {
 			return true;
 		} else {

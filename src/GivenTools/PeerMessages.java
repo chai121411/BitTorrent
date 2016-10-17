@@ -80,7 +80,7 @@ public class PeerMessages {
 			out.write(ByteBuffer.allocate(4).putInt(index).array()); //I think this is how you write the index 
 			
 			toPeer.write(out.toByteArray());
-			System.out.println("sendHaving: " + Arrays.toString(out.toByteArray()));
+			//System.out.println("sendHaving: " + Arrays.toString(out.toByteArray()));
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -184,7 +184,7 @@ public class PeerMessages {
 			byte[] bit = new byte[x];
 			fromPeer.read(bit);
 			
-			System.out.println(Arrays.toString(bit));
+			//System.out.println(Arrays.toString(bit));
 	
 		} catch (Exception e) {
 			System.out.println(e);
@@ -202,7 +202,7 @@ public class PeerMessages {
 			fromPeer.readFully(data, 0, data.length);
 			
 			//Server sent back the choke message
-			System.out.println("Response to interest " + Arrays.toString(data));
+			//System.out.println("Response to interest " + Arrays.toString(data));
 			
 			out.reset();
 			out.write(length_prefix);
