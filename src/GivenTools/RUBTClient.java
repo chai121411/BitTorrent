@@ -108,7 +108,7 @@ public class RUBTClient {
 		//Look at list of peers
 		for (Peer peer : peers) {
 			peer.printPeer();
-			peer.tryHandshakeAndDownload(info_hash, generatedPeerID); //Pass info_hash and generatedpeerid to create handshakeheader
+			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes); //Pass info_hash and generatedpeerid to create handshakeheader
 			//Pass piece_hashes to verify SHA-1 of each download for each piece, did not do it yet*
 		}
 		

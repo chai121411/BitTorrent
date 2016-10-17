@@ -3,6 +3,8 @@ package GivenTools;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -23,7 +25,7 @@ public class PeerMessages {
 	
 	private static final byte[] have_prefix = {0,0,0,5};
 	
-	private static final byte[] request_length = {0,0,0,13};
+	private static final byte[] request_length = {0,0,0, 13};
 
 	
 	/**
@@ -102,28 +104,47 @@ public class PeerMessages {
 		}
 	}
 	
-	public byte[] getPiece () {
-//		byte[] data = new byte [5];
-		byte[] data = new byte [16384]; //?
+	public byte[] getPiece () throws IOException {
+		byte[] data = new byte [16384+13];
+		byte[] block = null;
 		
 		//9+X length prefix??
 		
 		/**
-		 * piece: <len=0009+X><id=7><index><begin><block>
+		 * piece: <len=0009+X><id=7> <index><begin><block>
 		 * The piece message is variable length, where X is the length of the block. The payload contains the following information:
 		
 		 * index: integer specifying the zero-based piece index
 		 * begin: integer specifying the zero-based byte offset within the piece
-		 * block: block of data, which is a subset of the piece specified by index.
+		 
+		 * block: block of data, which is a subset of the piece specified by index. SHOULD BE 16384
+		 * 
+		 * A Piece message consists of the 4-byte length prefix,
+		 *  1-byte message ID,
+		 * and a payload with a 4-byte piece index, 4-byte block offset within the piece in bytes
+		 * (so far the same as for the Request message), and a variable length block containing the raw bytes for the requested piece.
 		 */
 		
 		try {
 			fromPeer.readFully(data);
+			byte[] len = new byte[4]; //used to transform the first 4 bytes into the expected length X
+			len[0] = data[0];
+			len[1] = data[1];
+			len[2] = data[2];
+			len[3] = data[3];
+			ByteBuffer bb = ByteBuffer.wrap(len);
+			int expected_len = bb.getInt() - 9;
+			System.out.println("expected len: " + expected_len);
+			block = new byte[expected_len];
+			
+			//From data starting at index 13, copy length bytes into block starting at index 0 			
+			System.arraycopy(data, 13, block, 0, expected_len);
+			
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 		
-		return data;
+		return block;
 	}
 	
 	public void keepAlive () {

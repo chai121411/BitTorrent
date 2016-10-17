@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -57,7 +58,7 @@ public class Peer {
 		return fromPeer;
 	}
 	
-	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID) {
+	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
     	
     	System.out.println();
@@ -140,10 +141,10 @@ public class Peer {
 			    	*have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
 				*/
 				
-				int y = 0;
-				p.request(0, y, block_length);
-				System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
-				System.out.println("Why is there a 64 in getPiece?? Remove this line tryHandshakeAndDownload()****");
+				for (int i = 0; i < piece_hashes.length; i++) {
+					p.request(0, i, block_length);
+					System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
+				}
 			}
 			
 			closeResources();
