@@ -145,6 +145,9 @@ public class Peer {
 					System.out.println("Requesting piece index: " + i);
  					p.request(i, 0, block_length);
 					System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
+					//VERIFY SHA-1 HASH
+					
+					//SEND HAVE MESSAGE?
 					System.out.println("-------");
 				}
 			}

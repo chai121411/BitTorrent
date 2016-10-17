@@ -127,27 +127,15 @@ public class PeerMessages {
 		
 		try {
 			fromPeer.readFully(data);
-			byte[] len = new byte[4]; //used to transform the first 4 bytes into the expected length X
-			len[0] = data[0];
-			len[1] = data[1];
-			len[2] = data[2];
-			len[3] = data[3];
-			ByteBuffer bb = ByteBuffer.wrap(len);
-			int expected_len = bb.getInt() - 9;
-//			System.out.println("expected len: " + expected_len);
-			System.out.println(Arrays.toString(data));
-			
-			byte[] pindex = new byte[4];
-			pindex[0] = data[5];
-			pindex[1] = data[6];
-			pindex[2] = data[7];
-			pindex[3] = data[8];
-			ByteBuffer bb1 = ByteBuffer.wrap(pindex);
-			int index = bb1.getInt();
+			int expected_len = getBytesAsInt(data, 0) - 9; //9 + X, Offset 0
+			System.out.println("Expected len of block: " + expected_len);
+//			System.out.println(Arrays.toString(data));
+
+			int index = getBytesAsInt(data, 5); //Offset 5
 			System.out.println("Received piece Index: " + index);
 			block = new byte[expected_len];
 			
-			//From data starting at index 13, copy length bytes into block starting at index 0 			
+			//From data starting at index 13, copy length bytes into block starting at index 0, return this block		
 			System.arraycopy(data, 13, block, 0, expected_len);
 			
 		} catch (Exception e) {
@@ -155,6 +143,21 @@ public class PeerMessages {
 		}
 		
 		return block;
+	}
+	
+	//starting at index x, copy 4 bytes into buffer from data and get the integer represented by these 4 bytes
+	private int getBytesAsInt(byte[] data, int x) {
+		int result = -1;
+		byte[] buffer = new byte[4];
+		
+		buffer[0] = data[x];
+		buffer[1] = data[x+1];
+		buffer[2] = data[x+2];
+		buffer[3] = data[x+3];
+		ByteBuffer bb = ByteBuffer.wrap(buffer);
+		result = bb.getInt();
+		
+		return result;
 	}
 	
 	public void keepAlive () {
