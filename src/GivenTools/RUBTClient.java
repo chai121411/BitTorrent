@@ -74,7 +74,7 @@ public class RUBTClient {
 	
 	
 	public static void main(String[] args) {
-		String path = "src/GivenTools/newfile.mp4";
+		String path = "src/GivenTools/newfile.mov";
 		URL url = null;
 		String hostName = null;
 		int portno = -1;
@@ -110,14 +110,15 @@ public class RUBTClient {
 		//Look at list of peers
 		for (Peer peer : peers) {
 			//peer.printPeer();
-			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes); //Pass info_hash and generatedpeerid to create handshakeheader
-			//Pass piece_hashes to verify SHA-1 of each download for each piece, did not do it yet*
+			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
+				//Passed info_hash and generatedpeerid to create handshakeheader
+				//Passed piece_hashes to verify SHA-1 of each download for each piece
 		}
 		
 		//write downloaded file to location specified by args[1]
 		/*To do*/
 		
-	    //8.    When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
+	    //When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
 		try {
 			contactTrackerWithCompletedEvent();
 		} catch (MalformedURLException e) {

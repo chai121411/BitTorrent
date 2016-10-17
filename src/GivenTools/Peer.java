@@ -153,7 +153,7 @@ public class Peer {
 				contactTrackerWithStartedEvent();
 				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
-					System.out.println("Requesting piece index: " + i);
+					System.out.println("Requesting piece index(0-indexed): " + i);
 					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
 					int x = 0;
 					
