@@ -141,9 +141,9 @@ public class Peer {
 			    	*have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
 				*/
 				
-				for (int i = 0; i < piece_hashes.length; i++) {
-					p.request(0, i, block_length);
-					System.out.println("Piece index: " + i);
+				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
+					System.out.println("Requesting piece index: " + i);
+ 					p.request(i, 0, block_length);
 					System.out.println ("getPiece result: " + Arrays.toString(p.getPiece()) );
 					System.out.println("-------");
 				}

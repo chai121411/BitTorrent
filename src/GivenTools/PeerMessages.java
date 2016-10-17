@@ -134,7 +134,17 @@ public class PeerMessages {
 			len[3] = data[3];
 			ByteBuffer bb = ByteBuffer.wrap(len);
 			int expected_len = bb.getInt() - 9;
-			System.out.println("expected len: " + expected_len);
+//			System.out.println("expected len: " + expected_len);
+			System.out.println(Arrays.toString(data));
+			
+			byte[] pindex = new byte[4];
+			pindex[0] = data[5];
+			pindex[1] = data[6];
+			pindex[2] = data[7];
+			pindex[3] = data[8];
+			ByteBuffer bb1 = ByteBuffer.wrap(pindex);
+			int index = bb1.getInt();
+			System.out.println("Received piece Index: " + index);
 			block = new byte[expected_len];
 			
 			//From data starting at index 13, copy length bytes into block starting at index 0 			
