@@ -46,27 +46,27 @@ public class Peer {
 		last_piece_length = TI.file_length - ((TI.piece_hashes.length-1) * blocks_per_piece * block_length );
 	}
 	
-	public String getPeerID () {
+	public String getPeerID() {
 		return peer_id;
 	}
 	
-	public String getPeerIP () {
+	public String getPeerIP() {
 		return peer_ip;
 	}
 	
-	public int getPeerPort () {
+	public int getPeerPort() {
 		return peer_port;
 	}
 
-	public Socket getSocket () {
+	public Socket getSocket() {
 		return peerSocket;
 	}
 	
-	public DataOutputStream getOutput () {
+	public DataOutputStream getOutput() {
 		return toPeer;
 	}
 	
-	public DataInputStream getInput () {
+	public DataInputStream getInput() {
 		return fromPeer;
 	}
 	

@@ -4,10 +4,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-
+/**
+ * @author chai1
+ * @author trw63
+ *
+ */
 public class PeerMessages {
 	
 	private boolean choking;
@@ -58,7 +61,7 @@ public class PeerMessages {
 	 */
 	private static final int KEY_REQUEST = 6;
 	
-	public void start (Peer p) {
+	public void start(Peer p) {
 		choking = true;
 		interested = false;
 		peer_choking = true;
@@ -86,7 +89,7 @@ public class PeerMessages {
 		}
 	}
 	
-	public void request (int index, int begin, int length){
+	public void request(int index, int begin, int length) {
 		
 		try {
 			out.reset();
@@ -104,7 +107,7 @@ public class PeerMessages {
 		}
 	}
 	
-	public byte[] getPiece (int block_length) throws IOException {
+	public byte[] getPiece(int block_length) throws IOException {
 		byte[] data = new byte [block_length + 13];
 		byte[] block = null;
 		
@@ -172,7 +175,7 @@ public class PeerMessages {
 		}
 	}
 	
-	public void readBitfield () {
+	public void readBitfield() {
 		byte[] data = new byte [5];
 		
 		try {
@@ -189,7 +192,7 @@ public class PeerMessages {
 		}
 	}
 	
-	public boolean showInterest () {
+	public boolean showInterest() {
 		byte[] data = new byte[5];
 		try {
 			out.flush();
@@ -221,7 +224,7 @@ public class PeerMessages {
 		return false;
 	}
 	
-	public void uninterested () {
+	public void uninterested() {
 
 		try {
 			out.reset();
@@ -238,23 +241,23 @@ public class PeerMessages {
 	
 	
 	
-	public boolean isChoking () {
+	public boolean isChoking() {
 		return choking;
 	}
 	
-	public boolean isInterested () {
+	public boolean isInterested() {
 		return interested;
 	}
 	
-	public boolean Peer_choking () {
+	public boolean Peer_choking() {
 		return peer_choking;
 	}
 	
-	public boolean Peer_interested () {
+	public boolean Peer_interested() {
 		return peer_interested;
 	}
 	
-	public void choke () {
+	public void choke() {
 		
 		try {
 			out.reset();
@@ -269,7 +272,7 @@ public class PeerMessages {
 		}	
 	}
 	
-	public void unchoke () {
+	public void unchoke() {
 		try {
 			out.reset();
 			out.write(length_prefix);

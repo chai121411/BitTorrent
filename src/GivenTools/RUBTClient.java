@@ -133,7 +133,6 @@ public class RUBTClient {
 			System.err.println("Failed to close file_stream: " + e);
 		}
 
-		
 	}
 	
 	//Gets TorrentInfo from torrent file
