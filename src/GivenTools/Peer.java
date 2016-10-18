@@ -73,10 +73,6 @@ public class Peer {
 	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
     	
-    	System.out.println();
-    	System.out.println("Inside tryHandshakeAndDownload in Peer.java...");
-    	System.out.println();
-    	
 	    try {
 	    	peerSocket = new Socket(peer_ip, peer_port);
 	    	toPeer = new DataOutputStream(peerSocket.getOutputStream());
@@ -100,7 +96,7 @@ public class Peer {
 				closeResources();
 				return;
 			} else {
-				System.out.println("Peer gave a response in a valid handshake format + \n");
+				System.out.println("Peer gave a response in a valid handshake format \n");
 			}
 			
 			/**
