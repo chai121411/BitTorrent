@@ -75,27 +75,25 @@ public class RUBTClient {
 	
 	
 	public static void main(String[] args) {
-		String path = "src/GivenTools/newfile.mov";
 		URL url = null;
-		String hostName = null;
+//		String hostName = null;
 		int portno = -1;
 		HashMap tracker_info = null;
 		TI = null;
 		
 		//set args[0] ** Run -> Run Configurations -> Arguments -> {Type in args}
 		//Open the torrent file and retrieve the TorrentInfo
-		TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
+//		TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
+		TI = openTorrent(args[0]);
 		url = getURL(TI);
+		
 		//Get the host and portno by using the TorrentInfo
-		hostName = url.getHost();
+//		hostName = url.getHost();
 		portno = url.getPort();
-		//System.out.println(hostName);
-		//System.out.println(portno);
 		
 		//System.out.println(TI.piece_length);
 		//System.out.println(TI.piece_hashes); //?
- 		//System.out.println(TI.piece_hashes.length); //"Our download time is quite long for all 511 pieces." -Sakai forums, this could be it! ***
-		//May need these piece_hashes to do the SHA-1 verification to check the piece downloaded...
+ 		//System.out.println(TI.piece_hashes.length);
 		
  		piece_hashes = TI.piece_hashes;
 		
@@ -104,7 +102,9 @@ public class RUBTClient {
 		
 		//interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
-		createFileStream(path);
+		
+//		String path = "src/GivenTools/newfile.mov";
+		createFileStream(args[1]);
 		
 		//prints out the info decoded from the tracker
 		//ToolKit.print(tracker_info);
@@ -130,7 +130,7 @@ public class RUBTClient {
 		try {
 			file_stream.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Failed to close file_stream: " + e);
 		}
 
 		
@@ -149,17 +149,15 @@ public class RUBTClient {
 			dis.readFully(bytes);
 			dis.close();
 		} catch (final FileNotFoundException e) {
-			System.out.println("The torrent file was not found " + args0);
-			System.exit(1);
+			System.err.println("The torrent file was not found: " + e);
 		} catch (final IOException e) {
-			System.out.println("IO Exception. Exiting.");
-			System.exit(1);
+			System.err.println("Failed to open torrent file: " + e);
 		}
 		
 		try {
 			TI = new TorrentInfo(bytes);
 		} catch (BencodingException e) {
-			e.printStackTrace();
+			System.err.println("Failed to get TorrentInfo: " + e);
 		}
 		return TI;
 	}
@@ -183,7 +181,7 @@ public class RUBTClient {
 		try {
 			file_stream = new FileOutputStream(file);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			System.err.println("Failed to create a fileoutputstream: " + e);
 		}
 		
 	}
@@ -208,14 +206,14 @@ public class RUBTClient {
 					hash,peerID,portno,TI.file_length);
 			tracker = new URL(getRequest);
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to create getRequest in connectTracker: " + e);
 		}
 		
 		//Making the connection with the tracker 
 		try {
 			tracker_connect = (HttpURLConnection)tracker.openConnection();
 		} catch (Exception e) { 
-			System.out.println(e);
+			System.err.println("Failed to connect to tracker: " + e);
 		}
 		
 		//try reading info from tracker
@@ -232,11 +230,11 @@ public class RUBTClient {
 			//ToolKit.print(response);//info before it's decoded
 			decode = (HashMap)Bencoder2.decode(response);	
 		} catch (Exception e) {
-			System.out.println(e);
-			System.exit(1);
+			tracker_connect.disconnect();
+			System.err.println("Failed to read bytes from tracker: " + e);
 		}
 		
-		
+		tracker_connect.disconnect();
 		return decode;
 	}
 	
@@ -291,13 +289,15 @@ public class RUBTClient {
 					hash, RUBTClient.getGeneratedPeerID(), portno, TI.file_length);
 			tracker = new URL(getRequest);
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			System.err.println("Failed to contact tracker with completed event: " + e);
 		}
 		
 		try {
 			tracker_connect = (HttpURLConnection)tracker.openConnection();
+			System.out.println("Contacted tracker to verify download was successful");
+			tracker_connect.disconnect();
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Failed to contact tracker with completed event: " + e);
 		}
 		return;
 	}

@@ -3,8 +3,6 @@ package GivenTools;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -98,7 +96,7 @@ public class Peer {
 			//And call isEqualByteArray(info_hash, peersHandshake.info_hash) and isEqualByteArray(peer_id, peersHandshake.peerID)
 			
 			if (!checkHandshakeResponse(info_hash, peersHandshake)){
-				System.out.println("Peer responded with an invalid handshake.");
+				System.err.println("Peer responded with an invalid handshake.");
 				closeResources();
 				return;
 			} else {
@@ -311,7 +309,7 @@ public class Peer {
 			header.write(generatedPeerID.getBytes());
 //			System.out.println(Arrays.toString(header.toByteArray()));
 		} catch (IOException e) {
-			System.out.println("Failed to generate handshake header.");
+			System.err.println("Failed to generate handshake header.");
 		}
 		
 		return header.toByteArray();
@@ -364,7 +362,7 @@ public class Peer {
 		try {
 		    RUBTClient.file_stream.write(bytes);
     	} catch (IOException e) {
-	      e.printStackTrace();
+    		System.err.println("Writing to filestream failed: " + e);
 		}
 	}
 	
@@ -374,8 +372,7 @@ public class Peer {
 			fromPeer.close();
 			peerSocket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Closing resources failed: " + e);
 		}
 	}
 	

@@ -82,7 +82,7 @@ public class PeerMessages {
 			toPeer.write(out.toByteArray());
 			//System.out.println("sendHaving: " + Arrays.toString(out.toByteArray()));
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Have message failed: " + e);
 		}
 	}
 	
@@ -100,15 +100,13 @@ public class PeerMessages {
 			toPeer.write(out.toByteArray());
 			//System.out.println("toPeer Request in PeerMessages: " + Arrays.toString(out.toByteArray()));
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Request failed message: " + e);
 		}
 	}
 	
 	public byte[] getPiece (int block_length) throws IOException {
 		byte[] data = new byte [block_length + 13];
 		byte[] block = null;
-		
-		//9+X length prefix??
 		
 		/**
 		 * piece: <len=0009+X><id=7> <index><begin><block>
@@ -139,7 +137,7 @@ public class PeerMessages {
 			System.arraycopy(data, 13, block, 0, expected_len);
 			
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to get piece: " + e);
 		}
 		
 		return block;
@@ -170,7 +168,7 @@ public class PeerMessages {
 			
 			toPeer.write(out.toByteArray());
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to keep alive: " + e);
 		}
 	}
 	
@@ -187,7 +185,7 @@ public class PeerMessages {
 			//System.out.println(Arrays.toString(bit));
 	
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to readBitField: " + e);
 		}
 	}
 	
@@ -217,7 +215,7 @@ public class PeerMessages {
 			}
 			
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to show interest: " + e);
 		}
 		
 		return false;
@@ -234,7 +232,7 @@ public class PeerMessages {
 			interested = false;
 			
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to uninterested: " + e);
 		}	
 	}
 	
@@ -267,7 +265,7 @@ public class PeerMessages {
 			choking = true;
 			
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to choke: " + e);
 		}	
 	}
 	
@@ -281,7 +279,7 @@ public class PeerMessages {
 			choking = false;
 			
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println("Failed to unchoke: " + e);
 		}	
 	}
 	
