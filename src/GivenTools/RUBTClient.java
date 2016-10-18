@@ -110,7 +110,7 @@ public class RUBTClient {
 		//Look at list of peers
 		for (Peer peer : peers) {
 			//peer.printPeer();
-			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
+			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes, path);
 				//Passed info_hash and generatedpeerid to create handshakeheader
 				//Passed piece_hashes to verify SHA-1 of each download for each piece
 		}
@@ -281,24 +281,6 @@ public class RUBTClient {
 			e.printStackTrace();
 		}
 		return;
-	}
-	
-	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
-	private static void writeToFile(byte[] bytes, String path) {
-		try {
-			File file = new File(path);
-			
-			System.out.println("Writing to new file");
-			
-			FileOutputStream stream = new FileOutputStream(file);
-			try {
-			    stream.write(bytes);
-			} finally {
-			    stream.close();
-			}
-    	} catch (IOException e) {
-	      e.printStackTrace();
-		}
 	}
 
 }

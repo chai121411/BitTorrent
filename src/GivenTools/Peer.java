@@ -3,6 +3,8 @@ package GivenTools;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -70,7 +72,7 @@ public class Peer {
 		return fromPeer;
 	}
 	
-	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
+	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes, String downloadPath) {
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
     	
     	System.out.println();
@@ -223,7 +225,7 @@ public class Peer {
 						System.out.println("Piece " + (i+1) +" IS NOT verified");
 						return;
 					}
-					
+					writeToFile(piece.toByteArray(), downloadPath);
 					//SEND HAVE MESSAGE?
 					System.out.println("-------");
 				}
@@ -352,6 +354,24 @@ public class Peer {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
+	private static void writeToFile(byte[] bytes, String path) {
+		try {
+			File file = new File(path);
+			
+			System.out.println("Writing to new file");
+			
+			FileOutputStream stream = new FileOutputStream(file);
+			try {
+			    stream.write(bytes);
+			} finally {
+			    stream.close();
+			}
+    	} catch (IOException e) {
+	      e.printStackTrace();
 		}
 	}
 	
