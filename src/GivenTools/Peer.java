@@ -160,7 +160,7 @@ public class Peer {
 				contactTrackerWithStartedEvent();
 				 	
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
-					System.out.println("Requesting piece index: " + (i+1));
+					//System.out.println("Requesting piece index: " + (i+1));
 					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
 					int x = 0;
 					
@@ -223,12 +223,15 @@ public class Peer {
 						System.out.println("Piece " + (i+1) +" verified");
 					} else {
 						System.out.println("Piece " + (i+1) +" IS NOT verified");
-						return;
+						
+						//invalid piece need to re-send request for that piece
+						i--;
+						continue;
 					}
 					
 					writeToFile(piece.toByteArray());
 					//SEND HAVE MESSAGE?
-					System.out.println("-------");
+					//System.out.println("-------");
 				}
 				//write to file??
 			}
