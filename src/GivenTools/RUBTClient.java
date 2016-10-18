@@ -71,6 +71,7 @@ public class RUBTClient {
 	private static String generatedPeerID = null;
 	private static ByteBuffer[] piece_hashes = null; //The SHA-1 hash of each piece!
 	private static TorrentInfo TI;
+	public static FileOutputStream file_stream;
 	
 	
 	public static void main(String[] args) {
@@ -110,7 +111,7 @@ public class RUBTClient {
 		//Look at list of peers
 		for (Peer peer : peers) {
 			//peer.printPeer();
-			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes, path);
+			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
 				//Passed info_hash and generatedpeerid to create handshakeheader
 				//Passed piece_hashes to verify SHA-1 of each download for each piece
 		}
@@ -123,6 +124,12 @@ public class RUBTClient {
 			contactTrackerWithCompletedEvent();
 		} catch (MalformedURLException e) {
 			System.err.println("Could not contact tracker with completed event.");
+		}
+		
+		try {
+			file_stream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
 		
@@ -167,6 +174,17 @@ public class RUBTClient {
 	
 	public static TorrentInfo getTorrentInfo () {
 		return TI;
+	}
+	
+	public static void createFileStream (String path) {
+		File file = new File (path);
+		
+		try {
+			file_stream = new FileOutputStream(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	private static HashMap connectTracker(TorrentInfo TI, URL url, int portno) {
