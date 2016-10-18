@@ -104,6 +104,7 @@ public class RUBTClient {
 		
 		//interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
+		createFileStream(path);
 		
 		//prints out the info decoded from the tracker
 		//ToolKit.print(tracker_info);
