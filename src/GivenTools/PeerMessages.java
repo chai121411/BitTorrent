@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 /**
- * @author chai1
- * @author trw63
+ * @author Min Chai
+ * @author Terence Williams
  *
  */
 public class PeerMessages {
@@ -80,10 +80,10 @@ public class PeerMessages {
 			out.reset();
 			out.write(have_prefix);
 			out.write(KEY_HAVE);
-			out.write(ByteBuffer.allocate(4).putInt(index).array()); //I think this is how you write the index 
+			out.write(ByteBuffer.allocate(4).putInt(index).array()); 
 			
 			toPeer.write(out.toByteArray());
-			//System.out.println("sendHaving: " + Arrays.toString(out.toByteArray()));
+			//System.out.println("sendHaving for piece: " + (index+1));
 		} catch (Exception e) {
 			System.err.println("Have message failed: " + e);
 		}

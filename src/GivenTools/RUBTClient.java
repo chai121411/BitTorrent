@@ -13,18 +13,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 /**
- * @author chai1
- * @author trw63
+ * @author Min Chai 
+ * @author Terence Williams
  *
  */
 public class RUBTClient {
@@ -109,16 +113,50 @@ public class RUBTClient {
 		//prints out the info decoded from the tracker
 		//ToolKit.print(tracker_info);
 		
+		//used to get the index of the peer with the lowest average RTT
+		int index = 0;
+		long min = Long.MAX_VALUE;
+		
 		//Look at list of peers
 		for (Peer peer : peers) {
+			String host = peer.getPeerIP();
+			int timeOut = 5000;
+			long x = 0;
+			long y = 0;
+			long sum = 0;
+			long avg = 0;
+			
+			for(int i = 0; i < 10; i++){
+				
+				try {
+					x = System.nanoTime();
+					InetAddress.getByName(host).isReachable(timeOut);
+					y = System.nanoTime() - x;
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				sum += y;	
+			}
+			
+			
+			avg = sum/ (long)10;
+			
+			if(avg < min){
+				min = avg;
+				index = peers.indexOf(peer);
+			}
+			
 			//peer.printPeer();
-			peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
+			//peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
 				//Passed info_hash and generatedpeerid to create handshakeheader
 				//Passed piece_hashes to verify SHA-1 of each download for each piece
 		}
 		
-		//write downloaded file to location specified by args[1]
-		/*To do*/
+		//downloads file
+		peers.get(index).tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
 		
 	    //When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
 		try {
@@ -132,7 +170,19 @@ public class RUBTClient {
 		} catch (IOException e) {
 			System.err.println("Failed to close file_stream: " + e);
 		}
-
+		
+		
+		//Before the client exits it should send the tracker the stop event
+		try {
+			contactTrackerWithStoppedEvent();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		long downloadTime = peers.get(index).getElapsedTime();
+		
+		System.out.println("----------------------------------------------");
+		System.out.println("Total dowload time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
 	}
 	
 	//Gets TorrentInfo from torrent file
@@ -297,6 +347,34 @@ public class RUBTClient {
 			tracker_connect.disconnect();
 		} catch (IOException e) {
 			System.err.println("Failed to contact tracker with completed event: " + e);
+		}
+		return;
+	}
+	
+	private static void contactTrackerWithStoppedEvent() throws MalformedURLException {
+		URL url = TI.announce_url; 
+		int portno = url.getPort();
+		URL tracker = null;
+		String getRequest = null;
+		HttpURLConnection tracker_connect = null;
+		String hash = null;
+		
+		try {
+			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
+			getRequest = url +
+					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=%s&left=0&event=stopped", //**"stopped"**
+					hash, RUBTClient.getGeneratedPeerID(), portno, TI.file_length);
+			tracker = new URL(getRequest);
+		} catch (UnsupportedEncodingException e) {
+			System.err.println("Failed to contact tracker with stopped event: " + e);
+		}
+		
+		try {
+			tracker_connect = (HttpURLConnection)tracker.openConnection();
+			System.out.println("Contact tracker that client connection is closing");
+			tracker_connect.disconnect();
+		} catch (IOException e) {
+			System.err.println("Failed to contact tracker with stopped event: " + e);
 		}
 		return;
 	}

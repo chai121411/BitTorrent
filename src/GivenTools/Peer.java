@@ -16,8 +16,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
- * @author mxc3
- * @author trw63
+ * @author Min Chai
+ * @author Terence Williams
  *
  */
 
@@ -31,6 +31,7 @@ public class Peer {
 	private int block_length;
 	private int blocks_per_piece;
 	private static TorrentInfo TI;
+	private long elapsedTime;
 	
 	private static int last_piece_length; 
 	
@@ -44,6 +45,8 @@ public class Peer {
 		
 		//calculates the length of the last piece
 		last_piece_length = TI.file_length - ((TI.piece_hashes.length-1) * blocks_per_piece * block_length );
+		
+		elapsedTime = 0;
 	}
 	
 	public String getPeerID() {
@@ -68,6 +71,10 @@ public class Peer {
 	
 	public DataInputStream getInput() {
 		return fromPeer;
+	}
+	
+	public long getElapsedTime () {
+		return elapsedTime;
 	}
 	
 	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
@@ -152,7 +159,9 @@ public class Peer {
 				//The first time you begin the download,
 				//you need to contact the tracker and let it know you are starting to download.
 				contactTrackerWithStartedEvent();
-				 	
+				 
+				long started = System.nanoTime();
+				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
 					//System.out.println("Requesting piece index: " + (i+1));
 					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
@@ -215,6 +224,7 @@ public class Peer {
 					byte[] SHA1digest = digestToSHA1(piece.toByteArray());
 					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
 						System.out.println("Piece " + (i+1) +" verified");
+						p.sendHave(i);
 					} else {
 						System.out.println("Piece " + (i+1) +" IS NOT verified");
 						
@@ -224,10 +234,9 @@ public class Peer {
 					}
 					
 					writeToFile(piece.toByteArray());
-					//SEND HAVE MESSAGE?
-					//System.out.println("-------");
 				}
-				//write to file??
+				
+				elapsedTime = System.nanoTime() - started;
 			}
 			
 			closeResources();
