@@ -103,7 +103,7 @@ public class Peer {
 				closeResources();
 				return;
 			} else {
-				System.out.println("Peer gave a response in a valid handshake format \n");
+				System.out.println("Peer responded with a valid handshake\n");
 			}
 			
 			/**
@@ -159,6 +159,7 @@ public class Peer {
 				//The first time you begin the download,
 				//you need to contact the tracker and let it know you are starting to download.
 				contactTrackerWithStartedEvent();
+				System.out.println("Download is starting \n------------ \nPlease wait patiently for download to finish\n");
 				 
 				long started = System.nanoTime();
 				
@@ -223,7 +224,8 @@ public class Peer {
 					 */
 					byte[] SHA1digest = digestToSHA1(piece.toByteArray());
 					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
-						System.out.println("Piece " + (i+1) +" verified");
+						if( (i+1) % 10 == 0)
+							System.out.println("Piece " + (i+1) +" verified");
 						p.sendHave(i);
 					} else {
 						System.out.println("Piece " + (i+1) +" IS NOT verified");
