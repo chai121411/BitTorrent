@@ -117,10 +117,9 @@ public class RUBTClient {
 		int index = 0;
 		long min = Long.MAX_VALUE;
 		
-		//Look at list of peers
+		//Look at list of peers and computes the average lowest RTT
 		for (Peer peer : peers) {
 			String host = peer.getPeerIP();
-			int timeOut = 5000;
 			long x = 0;
 			long y = 0;
 			long sum = 0;
@@ -130,7 +129,7 @@ public class RUBTClient {
 				
 				try {
 					x = System.nanoTime();
-					InetAddress.getByName(host).isReachable(timeOut);
+					InetAddress.getByName(host).isReachable(5000);
 					y = System.nanoTime() - x;
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
@@ -147,6 +146,7 @@ public class RUBTClient {
 			if(avg < min){
 				min = avg;
 				index = peers.indexOf(peer);
+				
 			}
 			
 			//peer.printPeer();
@@ -343,7 +343,7 @@ public class RUBTClient {
 		
 		try {
 			tracker_connect = (HttpURLConnection)tracker.openConnection();
-			System.out.println("Contacted tracker to verify download was successful");
+			//System.out.println("Contacted tracker to verify download was successful");
 			tracker_connect.disconnect();
 		} catch (IOException e) {
 			System.err.println("Failed to contact tracker with completed event: " + e);
@@ -371,7 +371,7 @@ public class RUBTClient {
 		
 		try {
 			tracker_connect = (HttpURLConnection)tracker.openConnection();
-			System.out.println("Contact tracker that client connection is closing");
+			//System.out.println("Contact tracker that client connection is closing");
 			tracker_connect.disconnect();
 		} catch (IOException e) {
 			System.err.println("Failed to contact tracker with stopped event: " + e);

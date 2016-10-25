@@ -1,5 +1,7 @@
 package GivenTools;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -161,6 +163,9 @@ public class Peer {
 				contactTrackerWithStartedEvent();
 				System.out.println("Download is starting \n------------ \nPlease wait patiently for download to finish\n");
 				 
+				long two_minutes = System.nanoTime();
+				long keep_alive = 0;
+				
 				long started = System.nanoTime();
 				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
@@ -168,6 +173,13 @@ public class Peer {
 					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
 					int x = 0;
 					
+					keep_alive = System.nanoTime() - two_minutes;
+					
+					if(NANOSECONDS.toMinutes(keep_alive) >= 2){
+						p.keepAlive();
+						two_minutes = System.nanoTime();
+					}
+						
 					if(i+1 == piece_hashes.length){
 						
 						int temp = last_piece_length;
