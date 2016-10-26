@@ -84,7 +84,7 @@ public class RUBTClient {
 		int portno = -1;
 		HashMap tracker_info = null;
 		TI = null;
-		
+		boolean isSuccessfulDownload = false;
 		//set args[0] ** Run -> Run Configurations -> Arguments -> {Type in args}
 		//Open the torrent file and retrieve the TorrentInfo
 //		TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
@@ -149,20 +149,36 @@ public class RUBTClient {
 				
 			}
 			
-			//peer.printPeer();
+			peer.printPeer();
 			//peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
 				//Passed info_hash and generatedpeerid to create handshakeheader
 				//Passed piece_hashes to verify SHA-1 of each download for each piece
 		}
 		
 		//downloads file
-		peers.get(index).tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
-		
-	    //When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
-		try {
-			contactTrackerWithCompletedEvent();
-		} catch (MalformedURLException e) {
-			System.err.println("Could not contact tracker with completed event.");
+		System.out.println();
+		System.out.println("The peer I am trying to download from is this one below");
+		peers.get(index).printPeer();
+		isSuccessfulDownload = peers.get(index).tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
+		if (isSuccessfulDownload) {
+		    //When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
+			try {
+				contactTrackerWithCompletedEvent();
+			} catch (MalformedURLException e) {
+				System.err.println("Could not contact tracker with completed event.");
+			}
+			
+			//Before the client exits it should send the tracker the stop event
+			try {
+				contactTrackerWithStoppedEvent();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+			
+			long downloadTime = peers.get(index).getElapsedTime();
+			
+			System.out.println("----------------------------------------------");
+			System.out.println("Total dowload time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
 		}
 		
 		try {
@@ -170,19 +186,6 @@ public class RUBTClient {
 		} catch (IOException e) {
 			System.err.println("Failed to close file_stream: " + e);
 		}
-		
-		
-		//Before the client exits it should send the tracker the stop event
-		try {
-			contactTrackerWithStoppedEvent();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-		
-		long downloadTime = peers.get(index).getElapsedTime();
-		
-		System.out.println("----------------------------------------------");
-		System.out.println("Total dowload time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
 	}
 	
 	//Gets TorrentInfo from torrent file

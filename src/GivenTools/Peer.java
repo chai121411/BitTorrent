@@ -79,7 +79,7 @@ public class Peer {
 		return elapsedTime;
 	}
 	
-	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
+	public boolean tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
     	
 	    try {
@@ -103,7 +103,7 @@ public class Peer {
 			if (!checkHandshakeResponse(info_hash, peersHandshake)){
 				System.err.println("Peer responded with an invalid handshake.");
 				closeResources();
-				return;
+				return false;
 			} else {
 				System.out.println("Peer responded with a valid handshake\n");
 			}
@@ -258,6 +258,8 @@ public class Peer {
 	    catch (IOException e) {
 	    	System.err.println("Could not perform handshake and download file: " + e);
 	    }
+	    
+	    return true;
 	}
 	
 	private byte[] digestToSHA1(byte[] buffer) {
@@ -346,18 +348,24 @@ public class Peer {
 		//From peersHandshake starting at index 0, copy 28 bytes into peersHeader starting at index 0
 		System.arraycopy(peersHandshake, 0, peersHeader, 0, 28); 
 		//Check if valid fixed header
+//		System.out.println(Arrays.toString(peersHeader));
+//		System.out.println(Arrays.toString(fixedHeader));
 		if (!isEqualByteArray(fixedHeader, peersHeader)) {
 			return false;
 		}
 		
 		//From peersHandshake starting at index 28, copy 20 bytes into peersInfo starting at index 0
 		System.arraycopy(peersHandshake, 28, peersInfoHash, 0, 20);
+//		System.out.println(Arrays.toString(peersInfoHash));
+//		System.out.println(Arrays.toString(info_hash));
 		if (!isEqualByteArray(info_hash, peersInfoHash)) {
 			return false;
 		}
 		
 		//From peersHandshake starting at index 48, copy 20 bytes into peersID starting at index 0
 		System.arraycopy(peersHandshake, 48, peersID, 0, 20);
+//		System.out.println(Arrays.toString(peersID));
+//		System.out.println(Arrays.toString(peer_id.getBytes()));
 		if (!isEqualByteArray(peer_id.getBytes(), peersID)) {
 			return false;
 		}
