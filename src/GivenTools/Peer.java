@@ -109,9 +109,7 @@ public class Peer {
 				System.err.println("Peer responded with an invalid handshake.");
 				closeResources();
 				return false;
-			} else {
-				System.out.println("Peer responded with a valid handshake\n");
-			}
+			} 
 			
 			/**
 			 * The peer should immediately respond with his own handshake message, which takes the same form as yours. Otherwise drop connection.
