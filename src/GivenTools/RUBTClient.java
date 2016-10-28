@@ -149,16 +149,10 @@ public class RUBTClient {
 				
 			}
 			
-			peer.printPeer();
-			//peer.tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
-				//Passed info_hash and generatedpeerid to create handshakeheader
-				//Passed piece_hashes to verify SHA-1 of each download for each piece
+			//peer.printPeer();
 		}
 		
 		//downloads file
-		System.out.println();
-		System.out.println("The peer I am trying to download from is this one below");
-		peers.get(index).printPeer();
 		isSuccessfulDownload = peers.get(index).tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
 		if (isSuccessfulDownload) {
 		    //When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
@@ -178,7 +172,7 @@ public class RUBTClient {
 			long downloadTime = peers.get(index).getElapsedTime();
 			
 			System.out.println("----------------------------------------------");
-			System.out.println("Total dowload time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
+			System.out.println("Total download time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
 		}
 		
 		try {
@@ -297,20 +291,28 @@ public class RUBTClient {
 		
 		for (int i = 0; i < list.size(); i++) {
 			HashMap peer_info = (HashMap)list.get(i);
-			
+			String id = null;
 			//gets peer id, ip and port
-			String peer_id = new String(((ByteBuffer)peer_info.get(KEY_PEER_ID)).array());
+			byte[] peer_id = ((ByteBuffer)peer_info.get(KEY_PEER_ID)).array();
 			String ip = new String(((ByteBuffer)peer_info.get(KEY_PEER_IP)).array());
 			int port = ((Integer)peer_info.get(KEY_PEER_PORT)).intValue();
 			
-			//creates new peer and adds it to the peer list
-			// use only the peers with peer_id prefix -RU
-			if(peer_id.contains(cs)){
-				Peer p = new Peer(peer_id, ip, port);
-				peers.add(p);
+			try {
+				id = (new String(peer_id,"ASCII"));
+				
+				//creates new peer and adds it to the peer list
+				// use only the peers with peer_id prefix -RU
+				if(id.contains(cs)){
+					Peer p = new Peer(peer_id, ip, port);
+					peers.add(p);
+				}
+					
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
 			}
 			
 		}
+			
 	}
 	
 	//Generates a random peerId with length 20

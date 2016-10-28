@@ -24,7 +24,7 @@ import java.util.Arrays;
  */
 
 public class Peer {
-	private String peer_id;
+	private byte[] peer_id;
 	private String peer_ip;
 	private int peer_port;
 	private Socket peerSocket;
@@ -37,7 +37,7 @@ public class Peer {
 	
 	private static int last_piece_length; 
 	
-	public Peer (String id, String ip, int port) {
+	public Peer (byte[] id, String ip, int port) {
 		peer_id = id;
 		peer_ip = ip;
 		peer_port = port;
@@ -52,7 +52,12 @@ public class Peer {
 	}
 	
 	public String getPeerID() {
-		return peer_id;
+		try {
+			return (new String(peer_id,"ASCII"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public String getPeerIP() {
@@ -351,28 +356,23 @@ public class Peer {
 //		System.out.println(Arrays.toString(peersHeader));
 //		System.out.println(Arrays.toString(fixedHeader));
 		if (!isEqualByteArray(fixedHeader, peersHeader)) {
+			System.out.println("The header is wrong");
 			return false;
 		}
 		
 		//From peersHandshake starting at index 28, copy 20 bytes into peersInfo starting at index 0
 		System.arraycopy(peersHandshake, 28, peersInfoHash, 0, 20);
-//		System.out.println(Arrays.toString(peersInfoHash));
-//		System.out.println(Arrays.toString(info_hash));
 		if (!isEqualByteArray(info_hash, peersInfoHash)) {
+			System.out.println("The info hash is wrong");
 			return false;
 		}
 		
 		//From peersHandshake starting at index 48, copy 20 bytes into peersID starting at index 0
 		System.arraycopy(peersHandshake, 48, peersID, 0, 20);
-//		System.out.println(Arrays.toString(peersID));
-//		System.out.println(Arrays.toString(peer_id.getBytes()));
-		if (!isEqualByteArray(peer_id.getBytes(), peersID)) {
+		if (!isEqualByteArray(peer_id, peersID)) {
 			return false;
 		}
 		
-//		System.out.println(Arrays.toString(peersHeader));
-//		System.out.println(Arrays.toString(peersInfoHash));
-//		System.out.println(Arrays.toString(peersID));
 		return true;
 	}
 	
