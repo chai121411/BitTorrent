@@ -111,7 +111,7 @@ public class RUBTClient {
 		createFileStream(args[1]);
 		
 		//prints out the info decoded from the tracker
-		//ToolKit.print(tracker_info);
+		ToolKit.print(tracker_info);
 		
 		//used to get the index of the peer with the lowest average RTT
 		int index = 0;
@@ -149,9 +149,11 @@ public class RUBTClient {
 				
 			}
 			
-			//peer.printPeer();
+			peer.printPeer();
 		}
-		
+		System.out.println("*************************************");
+		System.out.println("Remote peer we are downloading from: **********************");
+		peers.get(index).printPeer();
 		//downloads file
 		isSuccessfulDownload = peers.get(index).tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
 		if (isSuccessfulDownload) {
