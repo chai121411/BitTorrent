@@ -150,6 +150,7 @@ public class RUBTClient {
 			}
 			
 			peer.printPeer();
+			System.out.println("RRT for peer: " + avg + " ns");
 		}
 		System.out.println("*************************************");
 		System.out.println("Remote peer we are downloading from: **********************");
