@@ -137,9 +137,9 @@ public class Peer {
 				
 				
 				
-				/*Thread the downloading with a new classes...  
+				/*Thread the downloading with new classes...  
 				 
-					class Downloader extends Thread {
+					class Downloader extends Runnable {
 						private int pieceIndex;
 						
 						public Downloader(int pieceIndex) {
@@ -164,14 +164,18 @@ public class Peer {
 				 	 
 				 	 while (i < piece_hashes.length) {
 				 	 	if (i % 2 == 0) {
-				 	 		Downloader thread_even = new Downloader(i);
-				 	 		thread_even.start(); //This will call run()
+				 	 		Downloader d_even = new Downloader(i);
+				 	 		Thread t_even = new Thread(d_even);
+				 	 		t_even.start(); //This will call run()
 				 	 	} else {
-				 	 		Downloader thread_odd = new Downloader(i);
-				 	 		thread_odd.start(); //This will call run()
+				 	 		Downloader d_odd = new Downloader(i);
+				 	 		Thread t_odd = new Thread(d_odd);
+				 	 		t_odd.start(); //This will call run()
 				 	 	}
 				 	 	i++;
 				 	 }
+				 	 
+				 	 Could be wrong...
 				 */
 				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
