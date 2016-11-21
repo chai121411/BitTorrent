@@ -137,45 +137,13 @@ public class Peer {
 				
 				
 				
-				/*Thread the downloading with new classes...  
-				 
-					class Downloader extends Runnable {
-						private int pieceIndex;
-						
-						public Downloader(int pieceIndex) {
-							this.pieceIndex = pieceIndex;
-						}
-						
-						public void run() {
-							PieceDownloader pd  = new PieceDownloader();
-							pd.download(this.pieceIndex);
-						}
-				 	}
-				 	
-				 	class PieceDownloader {
-				 		public byte[] download(int pieceIndex) {
-				 			//Code to download piece, (i.e. what is inside the for loop currently)
-				 		}
-				 	}
-				 	
-				 	//After the classes are implemented, have one thread download even piece_indexes and another thread download odd piece_indexes
-				 	  
-				 	 i = 0;
-				 	 
-				 	 while (i < piece_hashes.length) {
-				 	 	if (i % 2 == 0) {
-				 	 		Downloader d_even = new Downloader(i);
-				 	 		Thread t_even = new Thread(d_even);
-				 	 		t_even.start(); //This will call run()
-				 	 	} else {
-				 	 		Downloader d_odd = new Downloader(i);
-				 	 		Thread t_odd = new Thread(d_odd);
-				 	 		t_odd.start(); //This will call run()
-				 	 	}
-				 	 	i++;
-				 	 }
-				 	 
-				 	 Could be wrong...
+				/*Thread the peer? download from 3 peers
+				 *	Peer implements Runnable
+				 *	add a run method to Peer... probably change tryHandshakeAndDownload to run()
+				 * 		When downloading pieces, increment piece index by 3, because we will have 3 peers.
+				 * 		How to save all these pieces in a buffer?
+				 * 		when requested by a peer, How to upload pieces to peers?
+				 *  
 				 */
 				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
@@ -447,3 +415,45 @@ public class Peer {
 					*Write to peer that you "have" this piece. (verify the piece download with the piece_index just downloaded, PeerMessage.sendHave(piece_index)).
 			    	*have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
  */
+
+/*Thread the downloading with new classes...  
+IGNORE THIS
+
+class Downloader extends Runnable {
+	private int pieceIndex;
+	
+	public Downloader(int pieceIndex) {
+		this.pieceIndex = pieceIndex;
+	}
+	
+	public void run() {
+		PieceDownloader pd  = new PieceDownloader();
+		pd.download(this.pieceIndex);
+	}
+	}
+	
+	class PieceDownloader {
+		public byte[] download(int pieceIndex) {
+			//Code to download piece, (i.e. what is inside the for loop currently)
+		}
+	}
+	
+	//After the classes are implemented, have one thread download even piece_indexes and another thread download odd piece_indexes
+	  
+	 i = 0;
+	 
+	 while (i < piece_hashes.length) {
+	 	if (i % 2 == 0) {
+	 		Downloader d_even = new Downloader(i);
+	 		Thread t_even = new Thread(d_even);
+	 		t_even.start(); //This will call run()
+	 	} else {
+	 		Downloader d_odd = new Downloader(i);
+	 		Thread t_odd = new Thread(d_odd);
+	 		t_odd.start(); //This will call run()
+	 	}
+	 	i++;
+	 }
+	 
+	 Could be wrong...
+*/
