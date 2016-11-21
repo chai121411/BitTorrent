@@ -80,7 +80,7 @@ public class Peer {
 		return fromPeer;
 	}
 	
-	public long getElapsedTime () {
+	public long getElapsedTime() {
 		return elapsedTime;
 	}
 	
@@ -105,7 +105,7 @@ public class Peer {
 			//Extract info_hash and peerID out of the peersHandshake!
 			//And call isEqualByteArray(info_hash, peersHandshake.info_hash) and isEqualByteArray(peer_id, peersHandshake.peerID)
 			
-			if (!checkHandshakeResponse(info_hash, peersHandshake)){
+			if (!checkHandshakeResponse(info_hash, peersHandshake)) {
 				System.err.println("Peer responded with an invalid handshake.");
 				closeResources();
 				return false;
@@ -134,6 +134,45 @@ public class Peer {
 				long keep_alive = 0;
 				
 				long started = System.nanoTime();
+				
+				
+				
+				/*Thread the downloading with a new classes...  
+				 
+					class Downloader extends Thread {
+						private int pieceIndex;
+						
+						public Downloader(int pieceIndex) {
+							this.pieceIndex = pieceIndex;
+						}
+						
+						public void run() {
+							PieceDownloader pd  = new PieceDownloader();
+							pd.download(this.pieceIndex);
+						}
+				 	}
+				 	
+				 	class PieceDownloader {
+				 		public byte[] download(int pieceIndex) {
+				 			//Code to download piece, (i.e. what is inside the for loop currently)
+				 		}
+				 	}
+				 	
+				 	//After the classes are implemented, have one thread download even piece_indexes and another thread download odd piece_indexes
+				 	  
+				 	 i = 0;
+				 	 
+				 	 while (i < piece_hashes.length) {
+				 	 	if (i % 2 == 0) {
+				 	 		Downloader thread_even = new Downloader(i);
+				 	 		thread_even.start(); //This will call run()
+				 	 	} else {
+				 	 		Downloader thread_odd = new Downloader(i);
+				 	 		thread_odd.start(); //This will call run()
+				 	 	}
+				 	 	i++;
+				 	 }
+				 */
 				
 				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
 					//System.out.println("Requesting piece index: " + (i+1));
