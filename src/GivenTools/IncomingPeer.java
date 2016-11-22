@@ -11,30 +11,33 @@ import java.util.Arrays;
 //This class listens to incoming connections that want to request pieces we have downloaded
 public class IncomingPeer implements Runnable{
 
+	private ServerSocket svc;
 	private Socket incomingPeerSocket;
 	private DataOutputStream toPeer;
 	private DataInputStream fromPeer;
-	private int threadID;
+	private int incomingThreadID;
 	
 	public IncomingPeer (int tID) {
-		threadID = tID;
+		incomingThreadID = tID;
 	}
 
 	@Override
 	public void run() {
-		while (true) {
-			ServerSocket svc;
-			byte[] incomingPeersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
-			try {
-				svc = new ServerSocket(RUBTClient.portno, 10);
-		
+		byte[] incomingPeersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
+		try {
+			svc = new ServerSocket(6881 + incomingThreadID, 10);
+			
+			while (true) {
+			
 		    	// a "blocking" call which waits until a connection is requested	
 		    	incomingPeerSocket = svc.accept(); //Get a connection
+		    	System.out.println("PAST BLOCKING CALL IN INCOMINGPEER.JAVA");
 		    	
 		    	toPeer = new DataOutputStream(incomingPeerSocket.getOutputStream());
 				fromPeer = new DataInputStream(incomingPeerSocket.getInputStream());
-				
 				fromPeer.readFully(incomingPeersHandshake, 0, incomingPeersHandshake.length); //read fromPeer and store 68 bytes into peersHandshake
+				
+				System.out.println("From incoming peer: " + Arrays.toString(incomingPeersHandshake));
 				
 				/**
 				 * When serving files, you should check the incoming peer’s handshake to verify that the info_hash
@@ -48,13 +51,12 @@ public class IncomingPeer implements Runnable{
 				
 				toPeer.write(createHandshakeHeader(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID()));
 				
-				
+				//TODO KEEPALIVE? LISTEN FOR REQUESTS, SEND PIECES(sendPiece is implemented in PeerMessages.java)
 				
 				closeResources();
-			} catch (IOException e) {
-				System.err.print("Incoming connection error" + e);
 			}
-			
+		} catch (IOException e) {
+			System.err.print("Incoming connection error in IncomingPeer.java, run(): " + e);
 		}
 	}
 	
@@ -98,6 +100,7 @@ public class IncomingPeer implements Runnable{
 			toPeer.close();
 			fromPeer.close();
 			incomingPeerSocket.close();
+			svc.close();
 		} catch (IOException e) {
 			System.err.println("Closing resources failed: " + e);
 		}

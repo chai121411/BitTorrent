@@ -173,10 +173,9 @@ public class RUBTClient {
 		
 		//Have two threads to listen for incoming connections and send requested pieces
 		for	(int i = 0; i < 2; i++) {
-			IncomingPeer listenIncomingPeer = new IncomingPeer(threadID);
-			threadID++;
+			IncomingPeer listenIncomingPeer = new IncomingPeer(i);
 			Thread t = new Thread(listenIncomingPeer);
-			t.start();
+			t.start(); //calls run method in IncomingPeer class
 		}
 		
 		//Make a list of downloading threads to join(to block the main method)
@@ -185,7 +184,7 @@ public class RUBTClient {
 		for (Peer peer : peers) {
 			Thread downloading = new Thread(peer);
 			downloading_threads.add(downloading);
-			downloading.start();
+			downloading.start(); //Calls run method in Peer class
 		}
 		
 		// Allow downloading threads to finish before continuing the main method
