@@ -71,22 +71,23 @@ public class RUBTClient {
 	
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
-	private static byte[] info_hash = null;
+	public static byte[] info_hash = null;
 	private static String generatedPeerID = null;
-	private static ByteBuffer[] piece_hashes = null; //The SHA-1 hash of each piece!
+	public static ByteBuffer[] piece_hashes = null; //The SHA-1 hash of each piece!
 	private static TorrentInfo TI;
 	public static FileOutputStream file_stream;
+	public static int peersListLength;
+	public static int threadID = 0; //Used to give each Peer a threadID
 	
+	public static byte[][] downloadedPieces = null;  //Buffer to store downloadedPieces
+
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		URL url = null;
-//		String hostName = null;
 		int portno = -1;
 		HashMap tracker_info = null;
 		TI = null;
-		boolean isSuccessfulDownload = false;
-		//set args[0] ** Run -> Run Configurations -> Arguments -> {Type in args}
-		//Open the torrent file and retrieve the TorrentInfo
+		
 //		TI = openTorrent("src/GivenTools/CS352_Exam_Solutions.mp4.torrent");
 		TI = openTorrent(args[0]);
 		url = getURL(TI);
@@ -94,10 +95,6 @@ public class RUBTClient {
 		//Get the host and portno by using the TorrentInfo
 //		hostName = url.getHost();
 		portno = url.getPort();
-		
-		//System.out.println(TI.piece_length);
-		//System.out.println(TI.piece_hashes); //?
- 		//System.out.println(TI.piece_hashes.length);
 		
  		piece_hashes = TI.piece_hashes;
 		
@@ -110,73 +107,115 @@ public class RUBTClient {
 //		String path = "src/GivenTools/newfile.mov";
 		createFileStream(args[1]);
 		
+		//Initialize buffer size to number of pieces expected to download
+		downloadedPieces = new byte[piece_hashes.length][];
+		
 		//prints out the info decoded from the tracker
 		ToolKit.print(tracker_info);
+		
+		System.out.println("My generatedPeerID: " + generatedPeerID);
+		System.out.println("Peer list size: " + getPeersListLength());
 		
 		//used to get the index of the peer with the lowest average RTT
 		int index = 0;
 		long min = Long.MAX_VALUE;
 		
-		//Look at list of peers and computes the average lowest RTT
-		for (Peer peer : peers) {
-			String host = peer.getPeerIP();
-			long x = 0;
-			long y = 0;
-			long sum = 0;
-			long avg = 0;
-			
-			for(int i = 0; i < 10; i++){
-				
-				try {
-					x = System.nanoTime();
-					InetAddress.getByName(host).isReachable(5000);
-					y = System.nanoTime() - x;
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				
-				sum += y;	
-			}
-			
-			
-			avg = sum/ (long)10;
-			
-			if(avg < min){
-				min = avg;
-				index = peers.indexOf(peer);
-				
-			}
-			
-			peer.printPeer();
-			System.out.println("RRT for peer: " + avg + " ns");
-		}
-		System.out.println("*************************************");
-		System.out.println("Remote peer we are downloading from: **********************");
-		peers.get(index).printPeer();
+//Phase II leftover
+//		//Look at list of peers and computes the average lowest RTT
+//		for (Peer peer : peers) {
+//			String host = peer.getPeerIP();
+//			long x = 0;
+//			long y = 0;
+//			long sum = 0;
+//			long avg = 0;
+//			
+//			for(int i = 0; i < 10; i++){
+//				
+//				try {
+//					x = System.nanoTime();
+//					InetAddress.getByName(host).isReachable(5000);
+//					y = System.nanoTime() - x;
+//				} catch (UnknownHostException e) {
+//					e.printStackTrace();
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//				
+//				sum += y;	
+//			}
+//			
+//			
+//			avg = sum/ (long)10;
+//			
+//			if(avg < min){
+//				min = avg;
+//				index = peers.indexOf(peer);
+//				
+//			}
+//			
+//			peer.printPeer();
+//			System.out.println("RRT for peer: " + avg + " ns");
+//		}
+//		System.out.println("*************************************");
+//		System.out.println("Remote peer we are downloading from: **********************");
+//		peers.get(index).printPeer();
 		//downloads file
-		isSuccessfulDownload = peers.get(index).tryHandshakeAndDownload(info_hash, generatedPeerID, piece_hashes);
-		if (isSuccessfulDownload) {
-		    //When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
-			try {
-				contactTrackerWithCompletedEvent();
-			} catch (MalformedURLException e) {
-				System.err.println("Could not contact tracker with completed event.");
-			}
-			
-			//Before the client exits it should send the tracker the stop event
-			try {
-				contactTrackerWithStoppedEvent();
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-			
-			long downloadTime = peers.get(index).getElapsedTime();
-			
-			System.out.println("----------------------------------------------");
-			System.out.println("Total download time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
+		
+		//The first time you begin the download,
+		//you need to contact the tracker and let it know you are starting to download.
+		try {
+			contactTrackerWithStartedEvent();
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
+		System.out.println("Download is starting \n------------ \nPlease wait patiently for download to finish\n");
+		
+		//Make a list of threads to join
+		List<Thread> threads = new ArrayList<Thread>();
+		
+		for (Peer peer : peers) {
+			Thread t = new Thread(peer);
+			threads.add(t);
+			t.start();
+		}
+		
+		// Allow all threads to finish before continuing
+		for (Thread t : threads) {
+			t.join();
+		}
+		
+		System.out.println("Writing downloaded buffer to stream...");
+		//Write all pieces to file
+		for (byte[] piece : downloadedPieces) {
+			try {
+				file_stream.write(piece);
+			} catch (IOException e) {
+				System.err.println("Failed to write piece to stream: " + e);
+			}
+		}
+		
+		System.out.println("Finished writing buffer to stream.");
+		System.out.println("Contacting tracker with completed event...");
+	    //When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
+		try {
+			contactTrackerWithCompletedEvent();
+		} catch (MalformedURLException e) {
+			System.err.println("Could not contact tracker with completed event.");
+		}
+		
+		System.out.println("Contacting tracker with stopped event...");
+		//Before the client exits it should send the tracker the stop event
+		try {
+			contactTrackerWithStoppedEvent();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		long downloadTime = peers.get(index).getElapsedTime();
+		
+		System.out.println("----------------------------------------------");
+		System.out.println("Total download time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
 		
 		try {
 			file_stream.close();
@@ -222,6 +261,10 @@ public class RUBTClient {
 	
 	public static TorrentInfo getTorrentInfo () {
 		return TI;
+	}
+	
+	public static int getPeersListLength() {
+		return peersListLength;
 	}
 	
 	public static void createFileStream (String path) {
@@ -305,17 +348,17 @@ public class RUBTClient {
 				
 				//creates new peer and adds it to the peer list
 				// use only the peers with peer_id prefix -RU
-				if(id.contains(cs)){
-					Peer p = new Peer(peer_id, ip, port);
+				if (id.contains(cs)) {
+					Peer p = new Peer(peer_id, ip, port, threadID);
 					peers.add(p);
+					threadID++; //Increment for a new unused threadID
 				}
-					
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
-			
 		}
-			
+		
+		peersListLength = peers.size();	
 	}
 	
 	//Generates a random peerId with length 20
@@ -328,6 +371,33 @@ public class RUBTClient {
 			peerID += s.charAt(r.nextInt(s.length()));
 		
 		return peerID;
+	}
+	
+	//you need to contact the tracker and let it know you are STARTING the download
+	private static void contactTrackerWithStartedEvent() throws MalformedURLException {
+		URL url = TI.announce_url; 
+		int portno = url.getPort();
+		URL tracker = null;
+		String getRequest = null;
+		HttpURLConnection tracker_connect = null;
+		String hash = null;
+		
+		try {
+			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
+			getRequest = url +
+					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s&event=started", //**"started"**
+					hash, RUBTClient.getGeneratedPeerID(), portno, TI.file_length);
+			tracker = new URL(getRequest);
+		} catch (UnsupportedEncodingException e) {
+			System.err.println("Could not contact tracker with started event: " + e);
+		}
+		
+		try {
+			tracker_connect = (HttpURLConnection)tracker.openConnection();
+		} catch (IOException e) {
+			System.err.println("Could not contact tracker with started event: " + e);
+		}
+		return;
 	}
 	
 	//you need to contact the tracker and let it know you are completing the download

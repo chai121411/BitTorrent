@@ -23,7 +23,7 @@ import java.util.Arrays;
  *
  */
 
-public class Peer {
+public class Peer implements Runnable {
 	private byte[] peer_id;
 	private String peer_ip;
 	private int peer_port;
@@ -34,20 +34,18 @@ public class Peer {
 	private int blocks_per_piece;
 	private static TorrentInfo TI;
 	private long elapsedTime;
-	
+	private int peerThreadID;
 	private static int last_piece_length; 
 	
-	public Peer (byte[] id, String ip, int port) {
+	public Peer (byte[] id, String ip, int port, int threadID) {
 		peer_id = id;
 		peer_ip = ip;
 		peer_port = port;
+		peerThreadID = threadID;
 		TI = RUBTClient.getTorrentInfo();
 		block_length = RUBTClient.block_length;
 		blocks_per_piece = TI.piece_length / block_length;
-		
-		//calculates the length of the last piece
-		last_piece_length = TI.file_length - ((TI.piece_hashes.length-1) * blocks_per_piece * block_length );
-		
+		last_piece_length = TI.file_length - ((TI.piece_hashes.length-1) * blocks_per_piece * block_length ); //calculates the length of the last piece
 		elapsedTime = 0;
 	}
 	
@@ -84,23 +82,29 @@ public class Peer {
 		return elapsedTime;
 	}
 	
-	public boolean tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
+	public int getPeerThreadID() {
+		return peerThreadID;
+	}
+	
+	public void run() {
+		tryHandshakeAndDownload(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID(), RUBTClient.piece_hashes);
+	}
+	
+	public void tryHandshakeAndDownload (byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
     	
 	    try {
 	    	peerSocket = new Socket(peer_ip, peer_port);
 	    	toPeer = new DataOutputStream(peerSocket.getOutputStream());
 			fromPeer = new DataInputStream(peerSocket.getInputStream());
-			
 			byte[] handshakeHeader = createHandshakeHeader(info_hash, generatedPeerID);
 
-			//Perform handshake?
+			//Perform handshake
 			toPeer.write(handshakeHeader);
 			fromPeer.readFully(peersHandshake, 0, peersHandshake.length); //read fromPeer and store 68 bytes into peersHandshake
 			
 			//System.out.println("What I sent.........: " + Arrays.toString(handshakeHeader));
 			//System.out.println("Response from server: " + Arrays.toString(peersHandshake));
-
 			//Check if peersHandshake contains the same info_hash as the one inside the tracker AND it has the same peerID has the peerID stored inside this instance of Peer!
 			//Extract info_hash and peerID out of the peersHandshake!
 			//And call isEqualByteArray(info_hash, peersHandshake.info_hash) and isEqualByteArray(peer_id, peersHandshake.peerID)
@@ -108,7 +112,7 @@ public class Peer {
 			if (!checkHandshakeResponse(info_hash, peersHandshake)) {
 				System.err.println("Peer responded with an invalid handshake.");
 				closeResources();
-				return false;
+				return;
 			} 
 			
 			/**
@@ -124,29 +128,26 @@ public class Peer {
 			
 			//unchoked and interested, can download file
 			if (result) {
-				
-				//The first time you begin the download,
-				//you need to contact the tracker and let it know you are starting to download.
-				contactTrackerWithStartedEvent();
-				System.out.println("Download is starting \n------------ \nPlease wait patiently for download to finish\n");
 				 
 				long two_minutes = System.nanoTime();
 				long keep_alive = 0;
-				
 				long started = System.nanoTime();
-				
-				
 				
 				/*Thread the peer? download from 3 peers
 				 *	Peer implements Runnable
-				 *	add a run method to Peer... probably change tryHandshakeAndDownload to run()
+				 *	add a run method to Peer...  run calls tryhandshakeanddownload
 				 * 		When downloading pieces, increment piece index by 3, because we will have 3 peers.
 				 * 		How to save all these pieces in a buffer?
 				 * 		when requested by a peer, How to upload pieces to peers?
-				 *  
 				 */
 				
-				for (int i = 0; i < piece_hashes.length; i++) { //piece_hashes.length - number of pieces to download
+				//piece_hashes.length - number of pieces to download
+				//Incrementing by PeerListLength because we have multiple threads downloading pieces.
+				//For example
+					//thread0 downloads every n piece starting from 0
+					//thread1 downloads every n piece starting from 1
+					//thread1 downloads every n piece starting from 2
+				for (int i = getPeerThreadID(); i < piece_hashes.length; i = i + RUBTClient.getPeersListLength()) {
 					//System.out.println("Requesting piece index: " + (i+1));
 					ByteArrayOutputStream piece = new ByteArrayOutputStream ();
 					int x = 0;
@@ -162,7 +163,6 @@ public class Peer {
 						
 						int temp = last_piece_length;
 						byte[] resultingPiece;
-						
 						while (temp > 0) {
 							
 							if (temp > block_length) {
@@ -187,21 +187,13 @@ public class Peer {
 							piece.write(resultingPiece);	
 						}
 					}
-					//System.out.println ("getPiece result: " + Arrays.toString(piece.toByteArray()) );
-					//VERIFY SHA-1 HASH
 					/** 
 					 *  has an SHA1 hash for each piece of the file and the pieces are verified as the finish downloading, 
 					 *  and are discarded if they fail to match the hash, indicating something wrong was transmitted to you.
-					 *  
-					 *  The MessageDigest class provides the functionality of a message digest algorithm, such as MD5 or SHA. 
-			
-					 *	If not equal, resend request
 					 */
 					byte[] SHA1digest = digestToSHA1(piece.toByteArray());
 					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
-						if ((i+1) % 10 == 0) {
-							System.out.println("Piece " + (i+1) +" verified");
-						}
+						System.out.println("Piece " + (i+1) +" verified by threadID: " + peerThreadID);
 						/**
 						 * If you wish to serve files as well as download them, 
 						 * you should send a Have message for the piece to all connected peers
@@ -217,7 +209,7 @@ public class Peer {
 					}
 					
 					//TODO Store piece in a buffer, upload pieces to peers if requested, if we have the piece?
-					writeToFile(piece.toByteArray());
+					putPieceIntoDownloadedBuffer(i, piece.toByteArray());
 				}
 				
 				elapsedTime = System.nanoTime() - started;
@@ -229,9 +221,13 @@ public class Peer {
 	    	System.err.println("Could not perform handshake and download file: " + e);
 	    }
 	    
-	    return true;
+	    return;
 	}
 	
+	private void putPieceIntoDownloadedBuffer(int pieceIndex, byte[] byteArray) {
+		RUBTClient.downloadedPieces[pieceIndex] = byteArray;
+	}
+
 	private byte[] digestToSHA1(byte[] buffer) {
 		
 		MessageDigest md = null;
@@ -249,40 +245,11 @@ public class Peer {
 	
 	//digestToSHA1 then compare with piece_hash...
 	private boolean isEqualSHA1(byte[] piece_hash, byte[] downloaded_hash) {
-		//System.out.println(Arrays.toString(piece_hash));
-		//System.out.println(Arrays.toString(downloaded_hash));
 		if (MessageDigest.isEqual(piece_hash, downloaded_hash)) {
 			return true;
 		} else {
 			return false;
 		}
-	}
-	
-	//you need to contact the tracker and let it know you are STARTING the download
-	private void contactTrackerWithStartedEvent() throws MalformedURLException {
-		URL url = TI.announce_url; 
-		int portno = url.getPort();
-		URL tracker = null;
-		String getRequest = null;
-		HttpURLConnection tracker_connect = null;
-		String hash = null;
-		
-		try {
-			hash = URLEncoder.encode(new String(TI.info_hash.array(), "ISO-8859-1"),"ISO-8859-1");
-			getRequest = url +
-					String.format("?info_hash=%s&peer_id=%S&port=%s&uploaded=0&downloaded=0&left=%s&event=started", //**"started"**
-					hash, RUBTClient.getGeneratedPeerID(), portno, TI.file_length);
-			tracker = new URL(getRequest);
-		} catch (UnsupportedEncodingException e) {
-			System.err.println("Could not contact tracker with started event: " + e);
-		}
-		
-		try {
-			tracker_connect = (HttpURLConnection)tracker.openConnection();
-		} catch (IOException e) {
-			System.err.println("Could not contact tracker with started event: " + e);
-		}
-		return;
 	}
 	
 	/**
@@ -301,7 +268,6 @@ public class Peer {
 			header.write(fixedHeader);
 			header.write(info_hash);
 			header.write(generatedPeerID.getBytes());
-//			System.out.println(Arrays.toString(header.toByteArray()));
 		} catch (IOException e) {
 			System.err.println("Failed to generate handshake header.");
 		}
@@ -318,8 +284,6 @@ public class Peer {
 		//From peersHandshake starting at index 0, copy 28 bytes into peersHeader starting at index 0
 		System.arraycopy(peersHandshake, 0, peersHeader, 0, 28); 
 		//Check if valid fixed header
-//		System.out.println(Arrays.toString(peersHeader));
-//		System.out.println(Arrays.toString(fixedHeader));
 		if (!isEqualByteArray(fixedHeader, peersHeader)) {
 			System.out.println("The header is wrong");
 			return false;
@@ -351,7 +315,9 @@ public class Peer {
 		}
 	}
 	
+	//Unused leftover from PhaseII
 	//Writes bytes to a filepath. Will be used to write downloaded file into provided file path at args[1]
+	@SuppressWarnings("unused")
 	private static void writeToFile(byte[] bytes) {
 			
 		try {
@@ -376,6 +342,7 @@ public class Peer {
 		System.out.println("peerID: " + getPeerID());
 		System.out.println("peerIP: " + getPeerIP());
 		System.out.println("peerPort: " + getPeerPort());
+		System.out.println("peerThreadID: " + getPeerThreadID());
 	}
 }
 
@@ -415,45 +382,3 @@ public class Peer {
 					*Write to peer that you "have" this piece. (verify the piece download with the piece_index just downloaded, PeerMessage.sendHave(piece_index)).
 			    	*have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
  */
-
-/*Thread the downloading with new classes...  
-IGNORE THIS
-
-class Downloader extends Runnable {
-	private int pieceIndex;
-	
-	public Downloader(int pieceIndex) {
-		this.pieceIndex = pieceIndex;
-	}
-	
-	public void run() {
-		PieceDownloader pd  = new PieceDownloader();
-		pd.download(this.pieceIndex);
-	}
-	}
-	
-	class PieceDownloader {
-		public byte[] download(int pieceIndex) {
-			//Code to download piece, (i.e. what is inside the for loop currently)
-		}
-	}
-	
-	//After the classes are implemented, have one thread download even piece_indexes and another thread download odd piece_indexes
-	  
-	 i = 0;
-	 
-	 while (i < piece_hashes.length) {
-	 	if (i % 2 == 0) {
-	 		Downloader d_even = new Downloader(i);
-	 		Thread t_even = new Thread(d_even);
-	 		t_even.start(); //This will call run()
-	 	} else {
-	 		Downloader d_odd = new Downloader(i);
-	 		Thread t_odd = new Thread(d_odd);
-	 		t_odd.start(); //This will call run()
-	 	}
-	 	i++;
-	 }
-	 
-	 Could be wrong...
-*/
