@@ -78,13 +78,13 @@ public class RUBTClient {
 	public static FileOutputStream file_stream;
 	public static int peersListLength;
 	public static int threadID = 0; //Used to give each Peer a threadID
-	
+	public static int portno = -1;
 	public static byte[][] downloadedPieces = null;  //Buffer to store downloadedPieces
 
 	
 	public static void main(String[] args) throws InterruptedException {
 		URL url = null;
-		int portno = -1;
+
 		HashMap tracker_info = null;
 		TI = null;
 		
@@ -100,7 +100,7 @@ public class RUBTClient {
 		
 		//connects to the tracker and retrieves the interval and peer list data
 		tracker_info = connectTracker(TI, url, portno);
-		
+
 		//interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
 		
@@ -171,18 +171,26 @@ public class RUBTClient {
 		}
 		System.out.println("Download is starting \n------------ \nPlease wait patiently for download to finish\n");
 		
-		//Make a list of threads to join
-		List<Thread> threads = new ArrayList<Thread>();
-		
-		for (Peer peer : peers) {
-			Thread t = new Thread(peer);
-			threads.add(t);
+		//Have two threads to listen for incoming connections and send requested pieces
+		for	(int i = 0; i < 2; i++) {
+			IncomingPeer listenIncomingPeer = new IncomingPeer(threadID);
+			threadID++;
+			Thread t = new Thread(listenIncomingPeer);
 			t.start();
 		}
 		
-		// Allow all threads to finish before continuing
-		for (Thread t : threads) {
-			t.join();
+		//Make a list of downloading threads to join(to block the main method)
+		List<Thread> downloading_threads = new ArrayList<Thread>();
+		
+		for (Peer peer : peers) {
+			Thread downloading = new Thread(peer);
+			downloading_threads.add(downloading);
+			downloading.start();
+		}
+		
+		// Allow downloading threads to finish before continuing the main method
+		for (Thread downloading : downloading_threads) {
+			downloading.join();
 		}
 		
 		System.out.println("Writing downloaded buffer to stream...");
