@@ -169,7 +169,7 @@ public class RUBTClient {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		System.out.println("Download is starting \n------------ \nPlease wait patiently for download to finish\n");
+		System.out.println("Download is starting. Setting up incoming listener and downloading threads. \n------------ \nPlease wait patiently for download to finish\n");
 		
 		//Have two threads to listen for incoming connections and send requested pieces
 		for	(int i = 0; i < 2; i++) {

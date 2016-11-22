@@ -60,8 +60,6 @@ public class PeerMessages {
 	 */
 	private static final int KEY_REQUEST = 6;
 	
-	private static final int KEY_PIECE = 7;
-	
 	public void start(Peer p) {
 		choking = true;
 		interested = false;
@@ -105,23 +103,6 @@ public class PeerMessages {
 			//System.out.println("toPeer Request in PeerMessages: " + Arrays.toString(out.toByteArray()));
 		} catch (Exception e) {
 			System.err.println("Request message failed: " + e);
-		}
-	}
-	
-	public void sendPiece(int block_length, int index, int begin, byte[] block) {
-		byte[] piece_length = {0, 0, 0, (byte) (9 + block_length)};
-		try {
-			out.reset();
-			out.write(piece_length);
-			out.write(KEY_PIECE);
-			
-			out.write(ByteBuffer.allocate(4).putInt(index).array());
-			out.write(ByteBuffer.allocate(4).putInt(begin).array());
-			out.write(block);
-			
-			toPeer.write(out.toByteArray());
-			} catch (Exception e) {
-			System.err.println("Send piece message failed : " + e);
 		}
 	}
 	
