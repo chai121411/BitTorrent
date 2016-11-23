@@ -84,6 +84,12 @@ public class RUBTClient {
 	public static int portno = -1;
 	public static byte[][] downloadedPieces = null;  //Buffer to store downloadedPieces
 	public static int TXTNUM = -1;
+	
+	/*
+	TODO
+		read TXTNUM from txtfile, if nothing leave as -1
+		otherwise TXTNUM = number from txtfile
+	*/
 
 	public static void main(String[] args) throws InterruptedException {
 		URL url = null;
@@ -155,6 +161,7 @@ public class RUBTClient {
 		System.out.println("Writing downloaded buffer to stream...");
 		//Write all pieces to file
 		for (byte[] piece : downloadedPieces) {
+			if (piece != null && piece.length > 0 )
 			try {
 				file_stream.write(piece);
 			} catch (IOException e) {
@@ -250,7 +257,7 @@ public class RUBTClient {
 		File file = new File (path);
 		
 		try {
-			file_stream = new FileOutputStream(file);
+			file_stream = new FileOutputStream(file, true); //true allows append
 		} catch (FileNotFoundException e) {
 			System.err.println("Failed to create a fileoutputstream: " + e);
 		}
