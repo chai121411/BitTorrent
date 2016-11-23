@@ -69,6 +69,9 @@ public class RUBTClient {
 	//private static int interval;
 	private static List<Peer> peers;
 	
+	//Peers which we will download from
+	private static List<Peer> downloadPeers;
+	
 	//The info_hash should be the same as sent to the tracker, and the peer_id is the same as sent to the tracker.
 	//If the info_hash is different between two peers, then the connection is dropped.
 	public static byte[] info_hash = null;
@@ -76,7 +79,6 @@ public class RUBTClient {
 	public static ByteBuffer[] piece_hashes = null; //The SHA-1 hash of each piece!
 	private static TorrentInfo TI;
 	public static FileOutputStream file_stream;
-	public static int peersListLength;
 	public static int threadID = 0; //Used to give each Peer a threadID
 	public static int portno = -1;
 	public static byte[][] downloadedPieces = null;  //Buffer to store downloadedPieces
@@ -114,51 +116,8 @@ public class RUBTClient {
 		ToolKit.print(tracker_info);
 		
 		System.out.println("My generatedPeerID: " + generatedPeerID);
-		System.out.println("Peer list size: " + getPeersListLength());
+		System.out.println("Peer list size: " + getDownloadPeers().size());
 		
-		//used to get the index of the peer with the lowest average RTT
-		int index = 0;
-		long min = Long.MAX_VALUE;
-		
-//Phase II leftover
-//		//Look at list of peers and computes the average lowest RTT
-//		for (Peer peer : peers) {
-//			String host = peer.getPeerIP();
-//			long x = 0;
-//			long y = 0;
-//			long sum = 0;
-//			long avg = 0;
-//			
-//			for(int i = 0; i < 10; i++){
-//				
-//				try {
-//					x = System.nanoTime();
-//					InetAddress.getByName(host).isReachable(5000);
-//					y = System.nanoTime() - x;
-//				} catch (UnknownHostException e) {
-//					e.printStackTrace();
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//				
-//				sum += y;	
-//			}
-//			
-//			
-//			avg = sum/ (long)10;
-//			
-//			if(avg < min){
-//				min = avg;
-//				index = peers.indexOf(peer);
-//				
-//			}
-//			
-//			peer.printPeer();
-//			System.out.println("RRT for peer: " + avg + " ns");
-//		}
-//		System.out.println("*************************************");
-//		System.out.println("Remote peer we are downloading from: **********************");
-//		peers.get(index).printPeer();
 		//downloads file
 		
 		//The first time you begin the download,
@@ -171,17 +130,26 @@ public class RUBTClient {
 		}
 		System.out.println("Download is starting. Setting up incoming listener and downloading threads. \n------------ \nPlease wait patiently for download to finish\n");
 		
-		//Have two threads to listen for incoming connections and send requested pieces
+		//Have two threads to listen for incoming connections and send requested pieces, maybe dont need this incomingPeer class...
 		for	(int i = 0; i < 2; i++) {
 			IncomingPeer listenIncomingPeer = new IncomingPeer(i);
 			Thread t = new Thread(listenIncomingPeer);
 			t.start(); //calls run method in IncomingPeer class
 		}
 		
+		List<Peer> downloadPeers = new ArrayList<Peer>();
+		//Download only from peers whose ID begins with RU, PeerList contains other peers that may connect to us.
+		for (Peer peer : peers) {
+			if(peer.getPeerID().contains("-RU")) {
+				downloadPeers.add(peer);
+			}
+			
+		}
+		
 		//Make a list of downloading threads to join(to block the main method)
 		List<Thread> downloading_threads = new ArrayList<Thread>();
 		
-		for (Peer peer : peers) {
+		for (Peer peer : downloadPeers) {
 			Thread downloading = new Thread(peer);
 			downloading_threads.add(downloading);
 			downloading.start(); //Calls run method in Peer class
@@ -219,7 +187,7 @@ public class RUBTClient {
 			e.printStackTrace();
 		}
 		
-		long downloadTime = peers.get(index).getElapsedTime();
+		long downloadTime = peers.get(0).getElapsedTime();
 		
 		System.out.println("----------------------------------------------");
 		System.out.println("Total download time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
@@ -270,10 +238,10 @@ public class RUBTClient {
 		return TI;
 	}
 	
-	public static int getPeersListLength() {
-		return peersListLength;
+	public static List<Peer> getDownloadPeers() {
+		return downloadPeers;
 	}
-	
+
 	public static void createFileStream (String path) {
 		File file = new File (path);
 		
@@ -340,7 +308,7 @@ public class RUBTClient {
 	private static void buildPeerList(HashMap info){
 		ArrayList list = (ArrayList)info.get(KEY_PEERS);
 		peers = new ArrayList<Peer>();
-		CharSequence cs= "-RU";
+//		CharSequence cs= "-RU";
 		
 		for (int i = 0; i < list.size(); i++) {
 			HashMap peer_info = (HashMap)list.get(i);
@@ -355,17 +323,15 @@ public class RUBTClient {
 				
 				//creates new peer and adds it to the peer list
 				// use only the peers with peer_id prefix -RU
-				if (id.contains(cs)) {
-					Peer p = new Peer(peer_id, ip, port, threadID);
-					peers.add(p);
-					threadID++; //Increment for a new unused threadID
-				}
+//				if (id.contains(cs)) {
+				Peer p = new Peer(peer_id, ip, port, threadID);
+				peers.add(p);
+				threadID++; //Increment for a new unused threadID
+//				}
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		peersListLength = peers.size();	
 	}
 	
 	//Generates a random peerId with length 20

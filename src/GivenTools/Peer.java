@@ -147,7 +147,7 @@ public class Peer implements Runnable {
 					//thread0 downloads every n piece starting from 0
 					//thread1 downloads every n piece starting from 1
 					//thread1 downloads every n piece starting from 2
-				for (int i = getPeerThreadID(); i < piece_hashes.length; i = i + RUBTClient.getPeersListLength()) {
+				for (int i = getPeerThreadID(); i < piece_hashes.length; i = i + RUBTClient.getDownloadPeers().size()) {
 					//System.out.println("Requesting piece index: " + (i+1));
 					ByteArrayOutputStream piece = new ByteArrayOutputStream();
 					int x = 0;

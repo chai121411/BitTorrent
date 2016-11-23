@@ -9,6 +9,11 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+/**
+ * This class might be a bad idea of handling peer requests.
+ * Changed list peers in RUBTClient to include all peers now, not just those beginning with '-RU'...
+ */
+
 //TODO HANDLE REQUESTS AND SEND PIECE
 //This class listens to incoming connections that want to request pieces we have downloaded
 public class IncomingPeer implements Runnable{
