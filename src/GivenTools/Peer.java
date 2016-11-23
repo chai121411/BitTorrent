@@ -36,7 +36,6 @@ public class Peer implements Runnable {
 	private long elapsedTime;
 	private int peerThreadID;
 	private static int last_piece_length; 
-	private static int maxPieceDownloaded;
 	
 	public Peer (byte[] id, String ip, int port, int threadID) {
 		peer_id = id;
@@ -147,9 +146,10 @@ public class Peer implements Runnable {
 				//For example
 					//thread0 downloads every n piece starting from 0
 					//thread1 downloads every n piece starting from 1
-					//thread1 downloads every n piece starting from 2
+					//thread2 downloads every n piece starting from 2
 				int incr = RUBTClient.getDownloadPeers().size();
-				for (int i = getPeerThreadID(); i < piece_hashes.length; i = i + incr) {
+				
+				for (int i = getPeerThreadID() + RUBTClient.TXTNUM + 1; i < piece_hashes.length; i = i + incr) {
 					//System.out.println("Requesting piece index: " + (i+1));
 					ByteArrayOutputStream piece = new ByteArrayOutputStream();
 					int x = 0;
@@ -201,8 +201,8 @@ public class Peer implements Runnable {
 						 * you should send a Have message for the piece to all connected peers
 						 * once you have the full and hash-checked piece.
 						 */
-						if (i > maxPieceDownloaded) {
-							maxPieceDownloaded = i;
+						if (i > RUBTClient.TXTNUM) {
+							RUBTClient.setTXTNUM(i);					
 						}
 						p.sendHave(i);
 					} else {

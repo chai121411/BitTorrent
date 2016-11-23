@@ -79,11 +79,12 @@ public class RUBTClient {
 	public static ByteBuffer[] piece_hashes = null; //The SHA-1 hash of each piece!
 	private static TorrentInfo TI;
 	public static FileOutputStream file_stream;
-	public static int threadID = 0; //Used to give each Peer a threadID
+	public static int downloadthreadID = 0; //Used to give each Peer a threadID
+	public static int threadID = 100; ////Used to give each Peer a threadID
 	public static int portno = -1;
 	public static byte[][] downloadedPieces = null;  //Buffer to store downloadedPieces
+	public static int TXTNUM = -1;
 
-	
 	public static void main(String[] args) throws InterruptedException {
 		URL url = null;
 
@@ -129,11 +130,11 @@ public class RUBTClient {
 		System.out.println("Download is starting. Setting up incoming listener and downloading threads. \n------------ \nPlease wait patiently for download to finish\n");
 		
 		//Have two threads to listen for incoming connections and send requested pieces, maybe dont need this incomingPeer class...
-		for	(int i = 0; i < 2; i++) {
-			IncomingPeer listenIncomingPeer = new IncomingPeer(i);
-			Thread t = new Thread(listenIncomingPeer);
-			t.start(); //calls run method in IncomingPeer class
-		}
+//		for	(int i = 0; i < 2; i++) {
+//			IncomingPeer listenIncomingPeer = new IncomingPeer(i);
+//			Thread t = new Thread(listenIncomingPeer);
+//			t.start(); //calls run method in IncomingPeer class
+//		}
 		
 		System.out.println("downloadPeer list size: " + getDownloadPeers().size());
 		
@@ -221,6 +222,10 @@ public class RUBTClient {
 		return url;
 	}
 	
+	public static byte[] getInfo_hash() {
+		return info_hash;
+	}
+	
 	public static String getGeneratedPeerID() {
 		return generatedPeerID;
 	}
@@ -231,6 +236,14 @@ public class RUBTClient {
 	
 	public static List<Peer> getDownloadPeers() {
 		return downloadPeers;
+	}
+	
+	public static int getTXTNUM() {
+		return TXTNUM;
+	}
+
+	public static void setTXTNUM(int tXTNUM) {
+		TXTNUM = tXTNUM;
 	}
 
 	public static void createFileStream (String path) {
@@ -299,7 +312,7 @@ public class RUBTClient {
 	private static void buildPeerList(HashMap info){
 		ArrayList list = (ArrayList)info.get(KEY_PEERS);
 		peers = new ArrayList<Peer>();
-//		CharSequence cs= "-RU";
+		CharSequence cs= "-RU";
 		
 		for (int i = 0; i < list.size(); i++) {
 			HashMap peer_info = (HashMap)list.get(i);
@@ -314,11 +327,15 @@ public class RUBTClient {
 				
 				//creates new peer and adds it to the peer list
 				// use only the peers with peer_id prefix -RU
-//				if (id.contains(cs)) {
-				Peer p = new Peer(peer_id, ip, port, threadID);
-				peers.add(p);
-				threadID++; //Increment for a new unused threadID
-//				}
+				if (id.contains(cs)) {
+					Peer p = new Peer(peer_id, ip, port, downloadthreadID);
+					peers.add(p);
+					downloadthreadID++; //Increment for a new unused downloadthreadID
+				} else {
+					Peer p = new Peer(peer_id, ip, port, threadID);
+					peers.add(p);
+					threadID++; //Increment for a new unused threadID
+				}
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
