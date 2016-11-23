@@ -105,6 +105,7 @@ public class RUBTClient {
 
 		//interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
+		buildDownloadPeerList();
 		
 //		String path = "src/GivenTools/newfile.mov";
 		createFileStream(args[1]);
@@ -116,9 +117,6 @@ public class RUBTClient {
 		ToolKit.print(tracker_info);
 		
 		System.out.println("My generatedPeerID: " + generatedPeerID);
-		System.out.println("Peer list size: " + getDownloadPeers().size());
-		
-		//downloads file
 		
 		//The first time you begin the download,
 		//you need to contact the tracker and let it know you are starting to download.
@@ -137,14 +135,7 @@ public class RUBTClient {
 			t.start(); //calls run method in IncomingPeer class
 		}
 		
-		List<Peer> downloadPeers = new ArrayList<Peer>();
-		//Download only from peers whose ID begins with RU, PeerList contains other peers that may connect to us.
-		for (Peer peer : peers) {
-			if(peer.getPeerID().contains("-RU")) {
-				downloadPeers.add(peer);
-			}
-			
-		}
+		System.out.println("downloadPeer list size: " + getDownloadPeers().size());
 		
 		//Make a list of downloading threads to join(to block the main method)
 		List<Thread> downloading_threads = new ArrayList<Thread>();
@@ -331,6 +322,17 @@ public class RUBTClient {
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	private static void buildDownloadPeerList() {
+		//Download only from peers whose ID begins with RU
+		//This is a list of peers that have all the pieces downloaded
+		downloadPeers = new ArrayList<Peer>();
+		for (Peer peer : peers) {
+			if(peer.getPeerID().contains("-RU")) {
+				downloadPeers.add(peer);
+			}	
 		}
 	}
 	
