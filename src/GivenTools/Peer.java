@@ -7,11 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.Socket;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -87,7 +83,18 @@ public class Peer implements Runnable {
 	}
 	
 	public void run() {
-		tryHandshakeAndDownload(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID(), RUBTClient.piece_hashes);
+		
+		//stalls until user starts download
+		while (!RUBTClient.getStart()) {
+			
+			try {
+				Thread.sleep(1000);
+			} catch (Exception e) {
+				
+			}
+		} 
+		
+		tryHandshakeAndDownload(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID(), RUBTClient.getPiecesHash());
 	}
 	
 	public void tryHandshakeAndDownload (byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
@@ -149,7 +156,8 @@ public class Peer implements Runnable {
 					//thread2 downloads every n piece starting from 2
 				int incr = RUBTClient.getDownloadPeers().size();
 				
-				for (int i = getPeerThreadID() + RUBTClient.TXTNUM + 1; i < piece_hashes.length; i = i + incr) {
+				for (int i = getPeerThreadID() + RUBTClient.getTXTNUM() + 1; i < piece_hashes.length; i = i + incr) {
+					
 					//System.out.println("Requesting piece index: " + (i+1));
 					ByteArrayOutputStream piece = new ByteArrayOutputStream();
 					int x = 0;
@@ -196,15 +204,27 @@ public class Peer implements Runnable {
 					byte[] SHA1digest = digestToSHA1(piece.toByteArray());
 					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
 						System.out.println("Piece " + (i+1) +" verified by threadID: " + peerThreadID);
+						RUBTClient.setProgress(RUBTClient.getProgress() + 1);
 						/**
 						 * If you wish to serve files as well as download them, 
 						 * you should send a Have message for the piece to all connected peers
 						 * once you have the full and hash-checked piece.
 						 */
-						if (i > RUBTClient.TXTNUM) {
-							RUBTClient.setTXTNUM(i);					
-						}
 						p.sendHave(i);
+						
+						if (RUBTClient.getStop()) {
+							
+							if ( i < RUBTClient.getTXTNUM() || RUBTClient.getTXTNUM() == -1)
+								RUBTClient.setTXTNUM(i);
+							else if (i - 3 > RUBTClient.getTXTNUM()) {
+								RUBTClient.setTXTNUM(i);
+							}
+							
+							System.out.println("Interrupt received by ThreadID: " + getPeerThreadID() );
+							Thread.currentThread().interrupt();
+							return;
+						}
+						
 					} else {
 						System.out.println("Piece " + (i+1) +" IS NOT verified");
 						
@@ -230,7 +250,7 @@ public class Peer implements Runnable {
 	}
 	
 	private void putPieceIntoDownloadedBuffer(int pieceIndex, byte[] byteArray) {
-		RUBTClient.downloadedPieces[pieceIndex] = byteArray;
+		RUBTClient.getDownloadedPieces()[pieceIndex] = byteArray;
 	}
 
 	private byte[] digestToSHA1(byte[] buffer) {
@@ -326,7 +346,7 @@ public class Peer implements Runnable {
 	private static void writeToFile(byte[] bytes) {
 			
 		try {
-		    RUBTClient.file_stream.write(bytes);
+		    RUBTClient.getStream().write(bytes);
     	} catch (IOException e) {
     		System.err.println("Writing to filestream failed: " + e);
 		}
