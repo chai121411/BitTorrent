@@ -169,7 +169,7 @@ public class RUBTClient{
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
-		System.out.println("Download is starting. Setting up incoming listener and downloading threads. \n------------ \nPlease wait patiently for download to finish\n");
+		System.out.println("Setting up threads. \n------------ \nPress Start to start the download. You may press Quit the stop the download and resume at a later time.\n");
 
 		//Have two threads to listen for incoming connections and send requested pieces, maybe dont need this incomingPeer class...
 		//		for	(int i = 0; i < 2; i++) {

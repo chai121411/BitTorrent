@@ -94,10 +94,14 @@ public class Peer implements Runnable {
 			}
 		} 
 		
-		tryHandshakeAndDownload(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID(), RUBTClient.getPiecesHash());
+		if (isDownloadPeer()) {
+			tryHandshakeAndDownload(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID(), RUBTClient.getPiecesHash());
+		} else {
+			//New method to listen for incoming peer requests.
+		}
 	}
 	
-	public void tryHandshakeAndDownload (byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
+	public void tryHandshakeAndDownload(byte[] info_hash, String generatedPeerID, ByteBuffer[] piece_hashes) {
     	byte[] peersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
     	
 	    try {
@@ -258,6 +262,10 @@ public class Peer implements Runnable {
 	    return;
 	}
 	
+	public void listenToIncomingPeers( ) {
+		byte[] incomingPeersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
+	}
+	
 	private void putPieceIntoDownloadedBuffer(int pieceIndex, byte[] byteArray) {
 		RUBTClient.getDownloadedPieces()[pieceIndex] = byteArray;
 	}
@@ -358,6 +366,14 @@ public class Peer implements Runnable {
 		    RUBTClient.getStream().write(bytes);
     	} catch (IOException e) {
     		System.err.println("Writing to filestream failed: " + e);
+		}
+	}
+	
+	private boolean isDownloadPeer() {
+		if (this.getPeerThreadID() > 99) {
+			return false;
+		} else {
+			return true;
 		}
 	}
 	
