@@ -111,20 +111,20 @@ public class RUBTClient{
 
 		piece_hashes = TI.piece_hashes;
 		
-		if ( (new File ("dowloaded").exists()) ) {
-			System.out.println("This is the probelm");
+		if ( (new File ("downloaded")).exists() ) {
 			try {
-			ObjectInputStream ois = new ObjectInputStream (new FileInputStream ("dowloaded"));
+			ObjectInputStream ois = new ObjectInputStream (new FileInputStream ("downloaded"));
 			downloadedPieces = (byte[][]) ois.readObject();
 			ois.close();
 			
-			for(int i = 0; i < downloadedPieces.length; i++) {
-				if (downloadedPieces[i] == null) {
-					TXTNUM = i;
-					progress = i;
-					break;
+				for(int i = 0; i < downloadedPieces.length; i++) {
+					if (downloadedPieces[i] == null) {
+						TXTNUM = i - 1;
+						progress = TXTNUM;
+						System.out.println(TXTNUM);
+						break;
+					}
 				}
-			}
 			
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -143,9 +143,6 @@ public class RUBTClient{
 		//interval = ((Integer)tracker_info.get(KEY_INTERVAL)).intValue();
 		buildPeerList(tracker_info);
 		buildDownloadPeerList();
-
-		//		String path = "src/GivenTools/newfile.mov";
-		createFileStream(args[1]);
 
 		//prints out the info decoded from the tracker
 		ToolKit.print(tracker_info);
@@ -202,6 +199,10 @@ public class RUBTClient{
 		}
 		
 		System.out.println("Writing downloaded buffer to stream...");
+		
+		//String path = "src/GivenTools/newfile.mov";
+		createFileStream(args[1]);
+		
 		//Write all pieces to file
 		for (byte[] piece : downloadedPieces) {
 			if (piece != null && piece.length > 0 )
@@ -243,9 +244,6 @@ public class RUBTClient{
 		}
 	}
 
-	public static void startDownload () {
-		
-	}
 	//Gets TorrentInfo from torrent file
 	private static TorrentInfo openTorrent(String args0) {
 		byte[] bytes = null;
@@ -278,7 +276,7 @@ public class RUBTClient{
 		File file = new File (path);
 
 		try {
-			file_stream = new FileOutputStream(file, true); //true allows append
+			file_stream = new FileOutputStream(file); //true allows append
 		} catch (FileNotFoundException e) {
 			System.err.println("Failed to create a fileoutputstream: " + e);
 		}
@@ -311,6 +309,7 @@ public class RUBTClient{
 		//Making the connection with the tracker 
 		try {
 			tracker_connect = (HttpURLConnection)tracker.openConnection();
+			tracker_connect.setConnectTimeout(5000);
 		} catch (Exception e) { 
 			System.err.println("Failed to connect to tracker: " + e);
 		}
@@ -320,7 +319,7 @@ public class RUBTClient{
 			BufferedInputStream tracker_response = new BufferedInputStream(tracker_connect.getInputStream());
 			ByteArrayOutputStream write_bytes = new ByteArrayOutputStream(); //write_bytes just holds the bytes; not being sent
 			byte[] bytes = new byte[1];
-
+			
 			while(tracker_response.read(bytes) != -1)
 				write_bytes.write(bytes);
 

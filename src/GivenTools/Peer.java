@@ -204,7 +204,13 @@ public class Peer implements Runnable {
 					byte[] SHA1digest = digestToSHA1(piece.toByteArray());
 					if (isEqualSHA1(piece_hashes[i].array(), SHA1digest)) {
 						System.out.println("Piece " + (i+1) +" verified by threadID: " + peerThreadID);
-						RUBTClient.setProgress(RUBTClient.getProgress() + 1);
+						
+						if ( i+1 == piece_hashes.length ) {
+							RUBTClient.setProgress(piece_hashes.length);
+						} else {
+							RUBTClient.setProgress(RUBTClient.getProgress() + 1);
+						}
+						
 						/**
 						 * If you wish to serve files as well as download them, 
 						 * you should send a Have message for the piece to all connected peers
