@@ -169,15 +169,13 @@ public class RUBTClient{
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
-		System.out.println("Setting up threads. \n------------ \nPress Start to start the download. You may press Quit the stop the download and resume at a later time.\n");
+		System.out.println("------------ \nPress Start to start the download. You may press Quit the stop the download and resume at a later time.\n");
 
-		//Have two threads to listen for incoming connections and send requested pieces, maybe dont need this incomingPeer class...
-		//		for	(int i = 0; i < 2; i++) {
-		//			IncomingPeer listenIncomingPeer = new IncomingPeer(i);
-		//			Thread t = new Thread(listenIncomingPeer);
-		//			t.start(); //calls run method in IncomingPeer class
-		//		}
-
+		System.out.println("Setting up threads\n");
+		IncomingPeer listenIncomingPeer = new IncomingPeer();
+		Thread t = new Thread(listenIncomingPeer);
+		t.start(); //calls run method in IncomingPeer class
+		
 		System.out.println("downloadPeer list size: " + getDownloadPeers().size());
 
 		//Make a list of downloading threads to join(to block the main method)
@@ -552,6 +550,14 @@ public class RUBTClient{
 
 	public static byte[][] getDownloadedPieces () {
 		return downloadedPieces;
+	}
+	
+	public static int getThreadID() {
+		return threadID;
+	}
+
+	public static void setThreadID(int threadID) {
+		RUBTClient.threadID = threadID;
 	}
 	
 	public static int getTXTNUM() {

@@ -60,6 +60,8 @@ public class PeerMessages {
 	 */
 	private static final int KEY_REQUEST = 6;
 	
+	private static final int KEY_PIECE = 7;
+	
 	public void start(Peer p) {
 		choking = true;
 		interested = false;
@@ -145,7 +147,22 @@ public class PeerMessages {
 		return block;
 	}
 	
-	
+	private void sendPiece(int block_length, int index, int begin, byte[] block) {
+		byte[] piece_length = {0, 0, 0, (byte) (9 + block_length)};
+		try {
+			out.reset();
+			out.write(piece_length);
+			out.write(KEY_PIECE);
+			
+			out.write(ByteBuffer.allocate(4).putInt(index).array());
+			out.write(ByteBuffer.allocate(4).putInt(begin).array());
+			out.write(block);
+			
+			toPeer.write(out.toByteArray());
+			} catch (Exception e) {
+			System.err.println("Send piece message failed : " + e);
+		}
+	}
 	
 	//starting at index x, copy 4 bytes into buffer from data and get the integer represented by these 4 bytes
 	private int getBytesAsInt(byte[] data, int x) {

@@ -262,8 +262,31 @@ public class Peer implements Runnable {
 	    return;
 	}
 	
-	public void listenToIncomingPeers( ) {
+	public void listenToIncomingPeers( ) throws IOException {
 		byte[] incomingPeersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
+		
+		toPeer = new DataOutputStream(peerSocket.getOutputStream());
+		fromPeer = new DataInputStream(peerSocket.getInputStream());
+		fromPeer.readFully(incomingPeersHandshake, 0, incomingPeersHandshake.length); //read fromPeer and store 68 bytes into peersHandshake
+		
+		System.out.println("From incoming peer: " + Arrays.toString(incomingPeersHandshake));
+		
+		/**
+		 * When serving files, you should check the incoming peer’s handshake to verify that the info_hash
+		 * matches one that you are serving and close the connection if not.
+		 */
+		if (!checkIncomingInfoHash(incomingPeersHandshake)) {
+			System.err.println("Incoming peer sent an invalid info hash.");
+			closeResources();
+			return;
+		}
+		
+		toPeer.write(createHandshakeHeader(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID()));
+		
+		//TODO KEEPALIVE? LISTEN FOR REQUESTS, SEND PIECES(sendPiece is implemented in PeerMessages.java)
+		//while (keepalive?) {
+		
+		//}
 	}
 	
 	private void putPieceIntoDownloadedBuffer(int pieceIndex, byte[] byteArray) {
@@ -344,6 +367,18 @@ public class Peer implements Runnable {
 			return false;
 		}
 		
+		return true;
+	}
+	
+	private boolean checkIncomingInfoHash(byte[] incomingHandshake) {
+		byte[] incomingInfoHash = new byte[20];
+		
+		//From peersHandshake starting at index 28, copy 20 bytes into peersInfo starting at index 0
+		System.arraycopy(incomingHandshake, 28, incomingInfoHash, 0, 20);
+		if (!isEqualByteArray(RUBTClient.info_hash, incomingInfoHash)) {
+			System.out.println("The info hash is wrong");
+			return false;
+		}
 		return true;
 	}
 	
