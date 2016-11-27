@@ -197,7 +197,8 @@ public class PeerMessages {
 		try {
 			fromPeer.read(data);
 			
-			int x = data[3];
+			int x = data[3] - 1;
+			
 			byte[] bit = new byte[x];
 			fromPeer.read(bit);
 			

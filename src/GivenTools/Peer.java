@@ -225,8 +225,6 @@ public class Peer implements Runnable {
 						if (RUBTClient.getStop()) {
 							elapsedTime = System.nanoTime() - started;
 							
-							System.out.println(elapsedTime);
-							
 							if ( i < RUBTClient.getTXTNUM() || RUBTClient.getTXTNUM() == -1)
 								RUBTClient.setTXTNUM(i);
 							else if (i - 3 > RUBTClient.getTXTNUM()) {
@@ -430,40 +428,3 @@ public class Peer implements Runnable {
 		System.out.println("peerThreadID: " + getPeerThreadID());
 	}
 }
-
-
-/**
- *  It is likely that at least the last block of the last piece will be smaller than the block request size 
- *  (and the last piece smaller than the piece_length) 
- *  because the total torrent length is unlikely to be evenly divisible by the piece size.
- *  You will need to take this into account when requesting the end of the torrent
- *  
- *  *Do a loop to request all the pieces...
-				*For the number of pieces needed to download the file?
-		
-					*Find piece length you need to download for the current piece index, apparently only the last piece has a different piece length
-					*Make a request to the peer with this piece index, piece length 
-					*(request: <len prefix> is 13 and msg ID is 6. The payload: <index><begin><length> 
-					
-					* A peer should respond to a Request message with a ‘Piece’ message that includes the block requested. 
-					* Though the message type is called ‘Piece’, 
-					* it includes the information for a block, not necessarily a full piece.
-					* A Piece message consists of the 4-byte length prefix, 1-byte message ID, and a payload with a 4-byte piece index,
-					* 4-byte block offset within the piece in bytes (so far the same as for the Request message),
-					* and a variable length block containing the raw bytes for the requested piece.
-					* The length of this should be the same as the length requested.
-					*
-					
-					* When all blocks for a piece have been received, 
-					* you should perform a hash check to verify that the piece matches what is expected 
-					* and you have not been sent bad or malicious data.
-					* The ‘pieces’ element in the .torrent metafile includes a string of 20-byte hashes, one for each piece in the torrent. 
-					* Note that this is NOT a list, but is a single long string.
-					* You should perform a SHA1 hash on the downloaded piece contents 
-					* and compare that to the hash provided for that particular piece.
-					* If they do not match, you should discard the downloaded piece and request the blocks for it again.
-					***Looks like we need something in the torrent file which had a list of hashes i think...****
-				
-					*Write to peer that you "have" this piece. (verify the piece download with the piece_index just downloaded, PeerMessage.sendHave(piece_index)).
-			    	*have: <length prefix> is 5 and message ID is 4. The payload is a zero-based index of the piece that has just been downloaded and verified.
- */
