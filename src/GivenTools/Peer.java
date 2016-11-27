@@ -219,6 +219,9 @@ public class Peer implements Runnable {
 						p.sendHave(i);
 						
 						if (RUBTClient.getStop()) {
+							elapsedTime = System.nanoTime() - started;
+							
+							System.out.println(elapsedTime);
 							
 							if ( i < RUBTClient.getTXTNUM() || RUBTClient.getTXTNUM() == -1)
 								RUBTClient.setTXTNUM(i);

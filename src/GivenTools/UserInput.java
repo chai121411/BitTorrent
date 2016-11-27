@@ -77,6 +77,7 @@ public class UserInput implements Runnable{
 		}
 		
 		f.setVisible(false);
+		f.dispose();
 		return;
 	}
 	

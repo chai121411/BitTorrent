@@ -8,6 +8,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -86,6 +87,7 @@ public class RUBTClient{
 	private static int TXTNUM;
 	private static boolean stop;
 	private static boolean start;
+	private static long downloadTime;
 
 	/*
 	TODO
@@ -112,6 +114,16 @@ public class RUBTClient{
 		piece_hashes = TI.piece_hashes;
 		
 		if ( (new File ("downloaded")).exists() ) {
+			
+			try {
+				FileInputStream fs = new FileInputStream ("time");
+				DataInputStream ds = new DataInputStream (fs);
+				downloadTime = ds.readLong();
+				ds.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
 			try {
 			ObjectInputStream ois = new ObjectInputStream (new FileInputStream ("downloaded"));
 			downloadedPieces = (byte[][]) ois.readObject();
@@ -121,7 +133,6 @@ public class RUBTClient{
 					if (downloadedPieces[i] == null) {
 						TXTNUM = i - 1;
 						progress = TXTNUM;
-						System.out.println(TXTNUM);
 						break;
 					}
 				}
@@ -132,6 +143,7 @@ public class RUBTClient{
 		} else {
 			TXTNUM = -1;
 			progress = 0;
+			downloadTime = 0;
 			
 			//Initialize buffer size to number of pieces expected to download
 			downloadedPieces = new byte[piece_hashes.length][];
@@ -188,6 +200,19 @@ public class RUBTClient{
 		}
 		
 		if (progress < TI.piece_hashes.length) {
+			downloadTime += downloadPeers.get(0).getElapsedTime();
+			
+			System.out.println(downloadTime);
+			
+			try {
+				FileOutputStream fs = new FileOutputStream ("time");
+				DataOutputStream ds = new DataOutputStream (fs);
+				ds.writeLong(downloadTime);
+				ds.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
 			try {
 				ObjectOutputStream oos = new ObjectOutputStream (new FileOutputStream ("downloaded"));
 				oos.writeObject(downloadedPieces);
@@ -213,6 +238,25 @@ public class RUBTClient{
 				}
 		}
 		
+		/**
+		 * delete the files that help with data persistence
+		 * once the download has been completed
+ 		 * downloaded holds the byte array which stores the pieces of the file
+ 		 * time holds the time it takes to complete the full download
+ 		 * 
+		 */
+		if ( (new File ("downloaded")).exists() ) {
+			try{
+				File f = new File ("downloaded");
+				f.delete();
+				
+				File f2 = new File ("time");
+				f2.delete();
+			} catch (Exception e) {
+				System.err.println("Cannot delete file");
+			}
+		}
+		
 		System.out.println("Finished writing buffer to stream.");
 		System.out.println("Contacting tracker with completed event...");
 		//When the file is finished, you must contact the tracker and send it the completed event and properly close all TCP connections
@@ -232,7 +276,7 @@ public class RUBTClient{
 			e.printStackTrace();
 		}
 
-		long downloadTime = peers.get(0).getElapsedTime();
+		downloadTime += downloadPeers.get(0).getElapsedTime();
 
 		System.out.println("----------------------------------------------");
 		System.out.println("Total download time: " + NANOSECONDS.toMinutes(downloadTime) + " mins");
@@ -242,6 +286,7 @@ public class RUBTClient{
 		} catch (IOException e) {
 			System.err.println("Failed to close file_stream: " + e);
 		}
+		
 	}
 
 	//Gets TorrentInfo from torrent file
