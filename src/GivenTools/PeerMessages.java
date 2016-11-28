@@ -197,14 +197,10 @@ public class PeerMessages {
 		try {
 			fromPeer.read(data);
 			
-			int x = data[3] - 1;
-			System.out.println(x);
+			int x = data[3];
 			
 			byte[] bit = new byte[x];
 			fromPeer.read(bit);
-			
-			//System.out.println(Arrays.toString(bit));
-//			System.out.println(Arrays.toString(bit));
 	
 		} catch (Exception e) {
 			System.err.println("Failed to readBitField: " + e);
@@ -291,6 +287,7 @@ public class PeerMessages {
 			
 			
 			fromPeer.readFully(data, 0, data.length);
+//			fromPeer.read(data);
 			
 			if (Arrays.equals(data,out.toByteArray())) {
 				unchoke();

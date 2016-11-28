@@ -97,13 +97,7 @@ public class Peer implements Runnable {
 		if (isDownloadPeer()) {
 			tryHandshakeAndDownload(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID(), RUBTClient.getPiecesHash());
 		} else {
-			//New method to listen for incoming peer requests.
-			try {
-				handleIncomingPeer();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			handleIncomingPeer();
 		}
 	}
 	
@@ -266,13 +260,18 @@ public class Peer implements Runnable {
 	    return;
 	}
 	
-	public void handleIncomingPeer( ) throws IOException {
+	public void handleIncomingPeer() {
 		byte[] incomingPeersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
 		
-		toPeer = new DataOutputStream(peerSocket.getOutputStream());
-		fromPeer = new DataInputStream(peerSocket.getInputStream());
-		fromPeer.readFully(incomingPeersHandshake, 0, incomingPeersHandshake.length); //read fromPeer and store 68 bytes into peersHandshake
-		
+		//Set peer socket in incomingpeer
+		try {
+			toPeer = new DataOutputStream(peerSocket.getOutputStream());
+			fromPeer = new DataInputStream(peerSocket.getInputStream());
+			fromPeer.readFully(incomingPeersHandshake, 0, incomingPeersHandshake.length); //read fromPeer and store 68 bytes into peersHandshake
+	//		fromPeer.read(incomingPeersHandshake);
+		} catch (IOException e1) {
+			System.err.println("Failed to read handshake from incoming peer" + e1);
+		}
 		System.out.println("From incoming peer: " + Arrays.toString(incomingPeersHandshake));
 		
 		/**
@@ -285,7 +284,11 @@ public class Peer implements Runnable {
 			return;
 		}
 		
-		toPeer.write(createHandshakeHeader(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID()));
+		try {
+			toPeer.write(createHandshakeHeader(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID()));
+		} catch (IOException e1) {
+			System.err.println("Failed to write handshake to incoming peer" + e1);
+		}
 		
 		PeerMessages p = new PeerMessages();
 		p.start(this);
@@ -296,9 +299,17 @@ public class Peer implements Runnable {
 		//LISTEN FOR REQUESTS, SEND PIECES(sendPiece is implemented in PeerMessages.java)
 		//while (keepalive?) {
 		
+		int stopCount = 0;
+		
 		while (!p.peerInterest()) {
 			try {
 				Thread.sleep(1000);
+				if (stopCount > 30) {
+					System.err.println("Did not receive interested message after 30. Closing resources from uninterested incoming peer.");
+					closeResources();
+					return;
+				}
+				stopCount++;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -324,21 +335,32 @@ public class Peer implements Runnable {
 			if (Arrays.equals(len, p.getKeepAlive())) {
 				start = System.nanoTime();
 			} else if (Arrays.equals(len, p.getRequestLength())) {
-				int x = fromPeer.readByte();
-				
-				if (x != 6 ) {
-					p.choke();
-					break;
+				try {
+					int x = fromPeer.readByte();
+					
+					if (x != 6 ) {
+						p.choke();
+						break;
+					}
+				} catch (IOException e) {
+					System.err.println("Failed to read byte from incoming peer: " + e);
 				}
 				
-				int index = fromPeer.readInt();
-				int begin = fromPeer.readInt();
-				int length = fromPeer.readInt();
 				
-				byte [] piece = RUBTClient.getDownloadedPieces()[index];
-				byte [] block = Arrays.copyOfRange(piece, begin, begin + length);
+				try {
+					int index = fromPeer.readInt();
 				
-				p.sendPiece(index, begin, length, block);
+					int begin = fromPeer.readInt();
+					int length = fromPeer.readInt();
+					
+					byte [] piece = RUBTClient.getDownloadedPieces()[index];
+					byte [] block = Arrays.copyOfRange(piece, begin, begin + length);
+					
+					p.sendPiece(index, begin, length, block);
+				} catch (IOException e) {
+					System.err.println("Failed to read request from incoming peer and send piece: " + e);
+				}
+				
 			} else {
 				p.choke();
 				break;
@@ -463,7 +485,7 @@ public class Peer implements Runnable {
 		}
 	}
 	
-	private boolean isDownloadPeer() {
+	public boolean isDownloadPeer() {
 		if (this.getPeerThreadID() > 99) {
 			return false;
 		} else {
@@ -487,5 +509,17 @@ public class Peer implements Runnable {
 		System.out.println("peerIP: " + getPeerIP());
 		System.out.println("peerPort: " + getPeerPort());
 		System.out.println("peerThreadID: " + getPeerThreadID());
+	}
+	
+	public void setPeerSocket(Socket peerSocket) {
+		this.peerSocket = peerSocket;
+	}
+
+	public void setToPeer(DataOutputStream toPeer) {
+		this.toPeer = toPeer;
+	}
+
+	public void setFromPeer(DataInputStream fromPeer) {
+		this.fromPeer = fromPeer;
 	}
 }

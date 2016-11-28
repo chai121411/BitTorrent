@@ -109,7 +109,7 @@ public class RUBTClient{
 
 		//Get the host and portno by using the TorrentInfo
 		//		hostName = url.getHost();
-		portno = url.getPort();
+		portno = 6881;
 
 		piece_hashes = TI.piece_hashes;
 		
@@ -191,6 +191,17 @@ public class RUBTClient{
 			downloading_threads.add(downloading);
 			downloading.start(); //Calls run method in Peer class
 		}
+		
+//		for (Peer peer : peers) {
+//			if (peer.isDownloadPeer()) {
+//				Thread downloading = new Thread(peer);
+//				downloading_threads.add(downloading);
+//				downloading.start(); //Calls run method in Peer class
+//			} else {
+//				Thread incoming_t = new Thread(peer);
+//				incoming_t.start();
+//			}
+//		}
 		
 		// Allow downloading threads to finish before continuing the main method
 		for (Thread downloading : downloading_threads) {
@@ -423,7 +434,7 @@ public class RUBTClient{
 
 	//Generates a random peerId with length 20
 	private static String generatePeerID() {
-		String s = "0123456789ABCDEFGHIJKLMNOPQSTVWXYZabcdefghijklmnopqstvwxyz";
+		String s = "0123456789ABCDEFGHIJKLMNOPQSTVWXYZ";
 		Random r = new Random();
 		String peerID = "";
 

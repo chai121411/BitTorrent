@@ -14,6 +14,16 @@ public class IncomingPeer implements Runnable{
 
 	@Override
 	public void run() {
+		//stalls until user starts download
+		while (!RUBTClient.getStart()) {
+			
+			try {
+				Thread.sleep(1000);
+			} catch (Exception e) {
+				
+			}
+		}
+		
 		ServerSocket svc = null;
 		try {
 			svc = new ServerSocket(6881, 10);
@@ -21,8 +31,13 @@ public class IncomingPeer implements Runnable{
 		    	// a "blocking" call which waits until a connection is requested	
 				Socket incomingPeerSocket = svc.accept(); 
 				
+				System.out.println("Detected an incoming peer");
+				
 		    	//Peer constructor - byte[] id, String ip, int port, int threadID
-		    	Peer incomingPeer = new Peer(null, incomingPeerSocket.getInetAddress().toString(), incomingPeerSocket.getPort(), RUBTClient.getThreadID());  	
+		    	Peer incomingPeer = new Peer(null, incomingPeerSocket.getInetAddress().getHostAddress(), incomingPeerSocket.getPort(), RUBTClient.getThreadID());  
+		    	incomingPeer.setPeerSocket(incomingPeerSocket);
+		    	System.out.println(incomingPeerSocket.getInetAddress().getHostAddress());
+		    	System.out.println(incomingPeerSocket.getPort());
 		    	Thread incoming_thread = new Thread(incomingPeer);
 		    	incoming_thread.start();
 		    	
