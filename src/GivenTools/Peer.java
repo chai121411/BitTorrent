@@ -98,6 +98,12 @@ public class Peer implements Runnable {
 			tryHandshakeAndDownload(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID(), RUBTClient.getPiecesHash());
 		} else {
 			//New method to listen for incoming peer requests.
+			try {
+				handleIncomingPeer();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -260,7 +266,7 @@ public class Peer implements Runnable {
 	    return;
 	}
 	
-	public void listenToIncomingPeers( ) throws IOException {
+	public void handleIncomingPeer( ) throws IOException {
 		byte[] incomingPeersHandshake = new byte[68]; //28 + 20 + 20 ; fixedHeader, info_Hash, peerID
 		
 		toPeer = new DataOutputStream(peerSocket.getOutputStream());
