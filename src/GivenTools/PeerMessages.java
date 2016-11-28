@@ -71,7 +71,8 @@ public class PeerMessages {
 		toPeer = p.getOutput();
 		fromPeer = p.getInput();
 		
-		readBitfield();
+		if (p.getPeerThreadID() < 99)
+			readBitfield();
 	}
 	
 	
@@ -147,7 +148,7 @@ public class PeerMessages {
 		return block;
 	}
 	
-	private void sendPiece(int block_length, int index, int begin, byte[] block) {
+	public void sendPiece(int index, int begin,int block_length, byte[] block) {
 		byte[] piece_length = {0, 0, 0, (byte) (9 + block_length)};
 		try {
 			out.reset();
@@ -280,6 +281,29 @@ public class PeerMessages {
 		return false;
 	}
 	
+	public boolean peerInterest () {
+		byte[] data = new byte[5];
+		
+		try {
+			out.flush();
+			out.write(length_prefix);
+			out.write(KEY_INTERESTED);
+			
+			
+			fromPeer.readFully(data, 0, data.length);
+			
+			if (Arrays.equals(data,out.toByteArray())) {
+				unchoke();
+				return true;
+			}
+			
+		} catch (Exception e) {
+			System.err.println("Failed to get interested message: " + e);
+		}
+		
+		return false;
+	}
+	
 	public void uninterested() {
 
 		try {
@@ -340,6 +364,26 @@ public class PeerMessages {
 		} catch (Exception e) {
 			System.err.println("Failed to unchoke: " + e);
 		}	
+	}
+
+
+	public static byte[] getKeepAlive() {
+		return keep_alive;
+	}
+
+
+	public static byte[] getLengthPrefix() {
+		return length_prefix;
+	}
+
+
+	public static byte[] getHavePrefix() {
+		return have_prefix;
+	}
+
+
+	public static byte[] getRequestLength() {
+		return request_length;
 	}
 	
 }

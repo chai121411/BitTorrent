@@ -287,10 +287,63 @@ public class Peer implements Runnable {
 		
 		toPeer.write(createHandshakeHeader(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID()));
 		
+		PeerMessages p = new PeerMessages();
+		p.start(this);
+		
 		//SEND BITFIELD MESSAGE
+		p.sendBitfield();
 		
 		//LISTEN FOR REQUESTS, SEND PIECES(sendPiece is implemented in PeerMessages.java)
 		//while (keepalive?) {
+		
+		while (!p.peerInterest()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		long start = System.nanoTime();
+		long timePassed = 0;
+		
+		byte[] len = new byte [4];
+		
+		while (true) {
+			if ( NANOSECONDS.toMinutes(((timePassed = System.nanoTime()) - start)) > 2) {
+				p.choke();
+				break;
+			}
+			
+			try {
+				fromPeer.readFully(len, 0, len.length);
+			} catch (Exception e) {
+				break;
+			}
+			
+			if (Arrays.equals(len, p.getKeepAlive())) {
+				start = System.nanoTime();
+			} else if (Arrays.equals(len, p.getRequestLength())) {
+				int x = fromPeer.readByte();
+				
+				if (x != 6 ) {
+					p.choke();
+					break;
+				}
+				
+				int index = fromPeer.readInt();
+				int begin = fromPeer.readInt();
+				int length = fromPeer.readInt();
+				
+				byte [] piece = RUBTClient.getDownloadedPieces()[index];
+				byte [] block = Arrays.copyOfRange(piece, begin, begin + length);
+				
+				p.sendPiece(index, begin, length, block);
+			} else {
+				p.choke();
+				break;
+			}
+		}
 		
 		//}
 	}
