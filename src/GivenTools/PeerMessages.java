@@ -27,7 +27,7 @@ public class PeerMessages {
 	
 	private static final byte[] have_prefix = {0,0,0,5};
 	
-	private static final byte[] request_length = {0,0,0, 13};
+	private static final byte[] request_length = {0,0,0,13};
 
 	
 	/**
@@ -193,11 +193,11 @@ public class PeerMessages {
 	
 	public void readBitfield() {
 		byte[] data = new byte [5];
-		
 		try {
 			fromPeer.read(data);
 			
 			int x = data[3] - 1;
+			System.out.println(x);
 			
 			byte[] bit = new byte[x];
 			fromPeer.read(bit);
@@ -208,6 +208,44 @@ public class PeerMessages {
 		} catch (Exception e) {
 			System.err.println("Failed to readBitField: " + e);
 		}
+	}
+	
+	public void sendBitfield () {
+		
+		byte[] bitfield = new byte [(int) Math.ceil(RUBTClient.getTorrentInfo().piece_hashes.length / 8.0)];
+		byte[][] temp = RUBTClient.getDownloadedPieces();
+		boolean have = true;
+		int y = 0;
+		
+		
+		for (int i = 0; i < temp.length; i++) {
+			
+			if ( temp[i] == null )
+				 have = false;
+			
+			if ( (i+1)% 8 == 0) {
+				if (have) {
+					bitfield [y] = 1;
+				} else {
+					bitfield [y] = 0;
+					have = true;
+				}
+				y++;
+			}
+			
+		}
+		
+		System.out.println(Arrays.toString(bitfield));
+		
+		try {
+			out.flush();
+			out.write(bitfield);
+			toPeer.write(bitfield);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public boolean showInterest() {

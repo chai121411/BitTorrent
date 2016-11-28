@@ -200,8 +200,6 @@ public class RUBTClient{
 		if (progress < TI.piece_hashes.length) {
 			downloadTime += downloadPeers.get(0).getElapsedTime();
 			
-			System.out.println(downloadTime);
-			
 			try {
 				FileOutputStream fs = new FileOutputStream ("time");
 				DataOutputStream ds = new DataOutputStream (fs);
