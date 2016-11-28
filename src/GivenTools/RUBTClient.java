@@ -160,7 +160,7 @@ public class RUBTClient{
 		ToolKit.print(tracker_info);
 
 		System.out.println("My generatedPeerID: " + generatedPeerID);
-
+		System.out.println();
 
 		//The first time you begin the download,
 		//you need to contact the tracker and let it know you are starting to download.
@@ -185,6 +185,9 @@ public class RUBTClient{
 		Thread user = new Thread (input);
 		downloading_threads.add(user);
 		user.start();
+		
+		Peer min = new Peer ("11111222223333344444".getBytes(), "172.27.27.2", 6881, 3);
+		downloadPeers.add(min);
 		
 		for (Peer peer : downloadPeers) {
 			Thread downloading = new Thread(peer);

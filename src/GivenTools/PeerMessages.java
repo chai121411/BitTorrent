@@ -232,12 +232,19 @@ public class PeerMessages {
 			
 		}
 		
-		System.out.println(Arrays.toString(bitfield));
 		
 		try {
 			out.flush();
+			int x = 1 + bitfield.length;
+			byte[] len = {0,0,0};
+			
+			out.write(len);
+			out.write(x);
+			out.write(5);
 			out.write(bitfield);
-			toPeer.write(bitfield);
+			
+			System.out.println(out.toByteArray());
+			toPeer.write(out.toByteArray());
 			
 		} catch (Exception e) {
 			e.printStackTrace();
