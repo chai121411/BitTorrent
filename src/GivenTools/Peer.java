@@ -281,7 +281,9 @@ public class Peer implements Runnable {
 		
 		toPeer.write(createHandshakeHeader(RUBTClient.info_hash, RUBTClient.getGeneratedPeerID()));
 		
-		//TODO KEEPALIVE? LISTEN FOR REQUESTS, SEND PIECES(sendPiece is implemented in PeerMessages.java)
+		//SEND BITFIELD MESSAGE
+		
+		//LISTEN FOR REQUESTS, SEND PIECES(sendPiece is implemented in PeerMessages.java)
 		//while (keepalive?) {
 		
 		//}
