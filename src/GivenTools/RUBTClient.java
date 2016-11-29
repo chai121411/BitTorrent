@@ -175,8 +175,6 @@ public class RUBTClient{
 		IncomingPeer listenIncomingPeer = new IncomingPeer();
 		Thread t = new Thread(listenIncomingPeer);
 		t.start(); //calls run method in IncomingPeer class
-		
-		System.out.println("downloadPeer list size: " + getDownloadPeers().size());
 
 		//Make a list of downloading threads to join(to block the main method)
 		List<Thread> downloading_threads = new ArrayList<Thread>();
@@ -186,25 +184,12 @@ public class RUBTClient{
 		downloading_threads.add(user);
 		user.start();
 		
-		Peer min = new Peer ("11111222223333344444".getBytes(), "172.27.27.2", 6881, 3);
-		downloadPeers.add(min);
-		
+		System.out.println("downloadPeer list size: " + getDownloadPeers().size());
 		for (Peer peer : downloadPeers) {
 			Thread downloading = new Thread(peer);
 			downloading_threads.add(downloading);
 			downloading.start(); //Calls run method in Peer class
 		}
-		
-//		for (Peer peer : peers) {
-//			if (peer.isDownloadPeer()) {
-//				Thread downloading = new Thread(peer);
-//				downloading_threads.add(downloading);
-//				downloading.start(); //Calls run method in Peer class
-//			} else {
-//				Thread incoming_t = new Thread(peer);
-//				incoming_t.start();
-//			}
-//		}
 		
 		// Allow downloading threads to finish before continuing the main method
 		for (Thread downloading : downloading_threads) {

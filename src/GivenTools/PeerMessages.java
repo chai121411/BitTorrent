@@ -148,9 +148,11 @@ public class PeerMessages {
 		return block;
 	}
 	
-	public void sendPiece(int index, int begin,int block_length, byte[] block) {
-		byte[] piece_length = {0, 0, 0, (byte) (9 + block_length)};
+	public void sendPiece(int index, int begin, int block_length, byte[] block) {
+		byte[] piece_length = ByteBuffer.allocate(4).putInt(9 + block_length).array();
+		
 		try {
+			System.out.println("piece len: " + Arrays.toString(piece_length));
 			out.reset();
 			out.write(piece_length);
 			out.write(KEY_PIECE);
@@ -158,6 +160,8 @@ public class PeerMessages {
 			out.write(ByteBuffer.allocate(4).putInt(index).array());
 			out.write(ByteBuffer.allocate(4).putInt(begin).array());
 			out.write(block);
+			
+			System.out.println("Sending piece " + index);
 			
 			toPeer.write(out.toByteArray());
 			} catch (Exception e) {
@@ -234,7 +238,7 @@ public class PeerMessages {
 		
 		
 		try {
-			out.flush();
+			out.reset();
 			int x = 1 + bitfield.length;
 			byte[] len = {0,0,0};
 			
@@ -243,7 +247,7 @@ public class PeerMessages {
 			out.write(5);
 			out.write(bitfield);
 			
-			System.out.println(out.toByteArray());
+			//System.out.println("Sending bitfield: " + Arrays.toString(out.toByteArray()));
 			toPeer.write(out.toByteArray());
 			
 		} catch (Exception e) {
@@ -263,7 +267,7 @@ public class PeerMessages {
 			fromPeer.readFully(data, 0, data.length);
 			
 			//Server sent back the choke message
-			//System.out.println("Response to interest " + Arrays.toString(data));
+			//System.out.println("Did server send back unchoke?: " + Arrays.toString(data));
 			
 			out.reset();
 			out.write(length_prefix);
@@ -288,7 +292,7 @@ public class PeerMessages {
 		byte[] data = new byte[5];
 		
 		try {
-			out.flush();
+			out.reset();
 			out.write(length_prefix);
 			out.write(KEY_INTERESTED);
 			
@@ -296,8 +300,9 @@ public class PeerMessages {
 			fromPeer.readFully(data, 0, data.length);
 //			fromPeer.read(data);
 			
-			if (Arrays.equals(data,out.toByteArray())) {
-				unchoke();
+			System.out.println("Actual peer interest: " + Arrays.toString(data));
+			System.out.println("Peer interest template: " + Arrays.toString(out.toByteArray()));
+			if (Arrays.equals(data, out.toByteArray())) {
 				return true;
 			}
 			
@@ -362,7 +367,7 @@ public class PeerMessages {
 			out.write(length_prefix);
 			out.write(KEY_UNCHOKE);
 			toPeer.write(out.toByteArray());
-			
+			//System.out.println(Arrays.toString(out.toByteArray()));
 			choking = false;
 			
 		} catch (Exception e) {

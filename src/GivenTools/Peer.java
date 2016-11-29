@@ -315,6 +315,10 @@ public class Peer implements Runnable {
 			}
 		}
 		
+		System.out.println("Past interest");
+		
+		p.unchoke();
+		
 		long start = System.nanoTime();
 		long timePassed = 0;
 		
