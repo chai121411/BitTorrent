@@ -172,6 +172,7 @@ public class RUBTClient{
 		System.out.println("------------ \nPress Start to start the download. You may press Quit the stop the download and resume at a later time.\n");
 
 		System.out.println("Setting up threads\n");
+		
 		IncomingPeer listenIncomingPeer = new IncomingPeer();
 		Thread t = new Thread(listenIncomingPeer);
 		t.start(); //calls run method in IncomingPeer class
@@ -184,7 +185,9 @@ public class RUBTClient{
 		downloading_threads.add(user);
 		user.start();
 		
+
 		System.out.println("downloadPeer list size: " + getDownloadPeers().size());
+
 		for (Peer peer : downloadPeers) {
 			Thread downloading = new Thread(peer);
 			downloading_threads.add(downloading);

@@ -45,42 +45,6 @@ public class Peer implements Runnable {
 		elapsedTime = 0;
 	}
 	
-	public String getPeerID() {
-		try {
-			return (new String(peer_id,"ASCII"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public String getPeerIP() {
-		return peer_ip;
-	}
-	
-	public int getPeerPort() {
-		return peer_port;
-	}
-
-	public Socket getSocket() {
-		return peerSocket;
-	}
-	
-	public DataOutputStream getOutput() {
-		return toPeer;
-	}
-	
-	public DataInputStream getInput() {
-		return fromPeer;
-	}
-	
-	public long getElapsedTime() {
-		return elapsedTime;
-	}
-	
-	public int getPeerThreadID() {
-		return peerThreadID;
-	}
 	
 	public void run() {
 		
@@ -189,6 +153,13 @@ public class Peer implements Runnable {
 							
 							temp -= block_length;
 		 					x+= block_length;
+		 					
+		 					if (resultingPiece == null) {
+		 						System.out.println("Choke received from ThreadID: " + getPeerThreadID());
+		 						Thread.currentThread().interrupt();
+		 						return;
+		 					}
+		 					
 							piece.write(resultingPiece);	
 						}
 						
@@ -197,6 +168,13 @@ public class Peer implements Runnable {
 						for (int j = 0; j < blocks_per_piece; j++) {
 		 					p.request(i, x, block_length);
 		 					byte[] resultingPiece = p.getPiece(block_length);
+		 					
+		 					if (resultingPiece == null) {
+		 						System.out.println("Choke received from ThreadID: " + getPeerThreadID());
+		 						Thread.currentThread().interrupt();
+		 						return;
+		 					}
+		 					
 		 					x+= block_length;
 							piece.write(resultingPiece);	
 						}
@@ -237,7 +215,7 @@ public class Peer implements Runnable {
 						}
 						
 					} else {
-						System.out.println("Piece " + (i+1) +" IS NOT verified");
+						System.out.println("Piece " + (i+1) +" IS NOT verified" +" verified by threadID: " + peerThreadID);
 						
 						//invalid piece need to re-send request for that piece
 						i--;
@@ -361,6 +339,13 @@ public class Peer implements Runnable {
 					byte [] block = Arrays.copyOfRange(piece, begin, begin + length);
 					
 					p.sendPiece(index, begin, length, block);
+					
+					if (RUBTClient.getStop() == true) {
+						p.choke();
+						Thread.currentThread().interrupt();
+						return;
+					}
+					
 				} catch (IOException e) {
 					System.err.println("Failed to read request from incoming peer and send piece: " + e);
 				}
@@ -513,6 +498,43 @@ public class Peer implements Runnable {
 		System.out.println("peerIP: " + getPeerIP());
 		System.out.println("peerPort: " + getPeerPort());
 		System.out.println("peerThreadID: " + getPeerThreadID());
+	}
+	
+	public String getPeerID() {
+		try {
+			return (new String(peer_id,"ASCII"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public String getPeerIP() {
+		return peer_ip;
+	}
+	
+	public int getPeerPort() {
+		return peer_port;
+	}
+
+	public Socket getSocket() {
+		return peerSocket;
+	}
+	
+	public DataOutputStream getOutput() {
+		return toPeer;
+	}
+	
+	public DataInputStream getInput() {
+		return fromPeer;
+	}
+	
+	public long getElapsedTime() {
+		return elapsedTime;
+	}
+	
+	public int getPeerThreadID() {
+		return peerThreadID;
 	}
 	
 	public void setPeerSocket(Socket peerSocket) {

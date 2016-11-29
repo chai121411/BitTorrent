@@ -110,8 +110,14 @@ public class PeerMessages {
 	}
 	
 	public byte[] getPiece(int block_length) throws IOException {
-		byte[] data = new byte [block_length + 13];
+		byte[] length = new byte [5];
+		byte[] data = new byte [block_length + 8];
 		byte[] block = null;
+		
+		out.write(length_prefix);
+		out.write(KEY_CHOKE);
+		
+		byte[] choke = out.toByteArray();
 		
 		/**
 		 * piece: <len=0009+X><id=7> <index><begin><block>
@@ -129,17 +135,23 @@ public class PeerMessages {
 		 */
 		
 		try {
-			fromPeer.readFully(data);
-			int expected_len = getBytesAsInt(data, 0) - 9; //9 + X, Offset 0
+			fromPeer.readFully(length);
+			
+			if (Arrays.equals(length, choke)) {
+				return null;
+			}
+			
+			int expected_len = getBytesAsInt(length, 0) - 9; //9 + X, Offset 0
 			//System.out.println("Expected len of block: " + expected_len);
 			//System.out.println(Arrays.toString(data));
-
-			int index = getBytesAsInt(data, 5); //Offset 5
+			
+			fromPeer.readFully(data);
+			int index = getBytesAsInt(data, 0); //Offset 5
 			//System.out.println("Received piece Index: " + index);
 			block = new byte[expected_len];
 
 			//From data starting at index 13, copy length bytes into block starting at index 0, return this block		
-			System.arraycopy(data, 13, block, 0, expected_len);
+			System.arraycopy(data, 8, block, 0, expected_len);
 			
 		} catch (Exception e) {
 			System.err.println("Failed to get piece: " + e);
@@ -205,7 +217,7 @@ public class PeerMessages {
 			
 			byte[] bit = new byte[x];
 			fromPeer.read(bit);
-	
+			
 		} catch (Exception e) {
 			System.err.println("Failed to readBitField: " + e);
 		}
@@ -247,7 +259,6 @@ public class PeerMessages {
 			out.write(5);
 			out.write(bitfield);
 			
-			//System.out.println("Sending bitfield: " + Arrays.toString(out.toByteArray()));
 			toPeer.write(out.toByteArray());
 			
 		} catch (Exception e) {
@@ -328,24 +339,6 @@ public class PeerMessages {
 		}	
 	}
 	
-	
-	
-	public boolean isChoking() {
-		return choking;
-	}
-	
-	public boolean isInterested() {
-		return interested;
-	}
-	
-	public boolean Peer_choking() {
-		return peer_choking;
-	}
-	
-	public boolean Peer_interested() {
-		return peer_interested;
-	}
-	
 	public void choke() {
 		
 		try {
@@ -374,8 +367,23 @@ public class PeerMessages {
 			System.err.println("Failed to unchoke: " + e);
 		}	
 	}
-
-
+	
+	public boolean isChoking() {
+		return choking;
+	}
+	
+	public boolean isInterested() {
+		return interested;
+	}
+	
+	public boolean Peer_choking() {
+		return peer_choking;
+	}
+	
+	public boolean Peer_interested() {
+		return peer_interested;
+	}
+	
 	public static byte[] getKeepAlive() {
 		return keep_alive;
 	}
