@@ -417,7 +417,8 @@ public class RUBTClient{
 		//This is a list of peers that have all the pieces downloaded
 		downloadPeers = new ArrayList<Peer>();
 		for (Peer peer : peers) {
-			if(peer.getPeerID().contains("-RU")) {
+			if (peer.getPeerID().contains("-RU") && 
+					(peer.getPeerIP().equals("172.16.97.11") || peer.getPeerIP().equals("172.16.97.12") || peer.getPeerIP().equals("172.16.97.13"))) {
 				downloadPeers.add(peer);
 			}	
 		}

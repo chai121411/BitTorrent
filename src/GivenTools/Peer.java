@@ -343,7 +343,23 @@ public class Peer implements Runnable {
 					byte [] piece = RUBTClient.getDownloadedPieces()[index];
 					byte [] block = Arrays.copyOfRange(piece, begin, begin + length);
 					
-					p.sendPiece(index, begin, length, block);
+					byte [] have = p.getHavePrefix();;
+					byte [] id;
+					
+					int count  = 0;
+					do {
+						p.sendPiece(index, begin, length, block);
+						id = new byte [4];
+						fromPeer.readFully(id);
+						Thread.sleep(1000);
+						count++;
+						if (count == 10) {
+							p.choke();
+							return;
+						}
+					} while (!Arrays.equals(have, id));
+					
+					fromPeer.readFully(new byte[5]);
 					
 					if (RUBTClient.getStop() == true) {
 						p.choke();
@@ -353,6 +369,9 @@ public class Peer implements Runnable {
 					
 				} catch (IOException e) {
 					System.err.println("Failed to read request from incoming peer and send piece: " + e);
+				} catch (InterruptedException e) {
+					System.err.println("Failed to sleep" + e);
+					e.printStackTrace();
 				}
 				
 			} else {
