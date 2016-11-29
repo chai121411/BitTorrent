@@ -429,6 +429,7 @@ public class RUBTClient{
 		for (int i = 0; i < 20; i++)
 			peerID += s.charAt(r.nextInt(s.length()));
 
+//		peerID = "11111222223333344444";
 		return peerID;
 	}
 
