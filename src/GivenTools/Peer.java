@@ -156,6 +156,8 @@ public class Peer implements Runnable {
 		 					
 		 					if (resultingPiece == null) {
 		 						System.out.println("Choke received from ThreadID: " + getPeerThreadID());
+		 						System.out.println("Interrupt received by ThreadID: " + getPeerThreadID() );
+								closeResources();
 		 						Thread.currentThread().interrupt();
 		 						return;
 		 					}
@@ -171,6 +173,8 @@ public class Peer implements Runnable {
 		 					
 		 					if (resultingPiece == null) {
 		 						System.out.println("Choke received from ThreadID: " + getPeerThreadID());
+		 						System.out.println("Interrupt received by ThreadID: " + getPeerThreadID() );
+								closeResources();
 		 						Thread.currentThread().interrupt();
 		 						return;
 		 					}
@@ -210,6 +214,7 @@ public class Peer implements Runnable {
 							}
 							
 							System.out.println("Interrupt received by ThreadID: " + getPeerThreadID() );
+							closeResources();
 							Thread.currentThread().interrupt();
 							return;
 						}
