@@ -32,8 +32,10 @@ public class Peer implements Runnable {
 	private long elapsedTime;
 	private int peerThreadID;
 	private static int last_piece_length; 
+	private boolean kill_thread;
 	
 	public Peer (byte[] id, String ip, int port, int threadID) {
+		kill_thread = false;
 		peer_id = id;
 		peer_ip = ip;
 		peer_port = port;
@@ -154,14 +156,6 @@ public class Peer implements Runnable {
 							temp -= block_length;
 		 					x+= block_length;
 		 					
-		 					if (resultingPiece == null) {
-		 						System.out.println("Choke received from ThreadID: " + getPeerThreadID());
-		 						System.out.println("Interrupt received by ThreadID: " + getPeerThreadID() );
-								closeResources();
-		 						Thread.currentThread().interrupt();
-		 						return;
-		 					}
-		 					
 							piece.write(resultingPiece);	
 						}
 						
@@ -170,14 +164,6 @@ public class Peer implements Runnable {
 						for (int j = 0; j < blocks_per_piece; j++) {
 		 					p.request(i, x, block_length);
 		 					byte[] resultingPiece = p.getPiece(block_length);
-		 					
-		 					if (resultingPiece == null) {
-		 						System.out.println("Choke received from ThreadID: " + getPeerThreadID());
-		 						System.out.println("Interrupt received by ThreadID: " + getPeerThreadID() );
-								closeResources();
-		 						Thread.currentThread().interrupt();
-		 						return;
-		 					}
 		 					
 		 					x+= block_length;
 							piece.write(resultingPiece);	
@@ -222,6 +208,10 @@ public class Peer implements Runnable {
 					} else {
 						System.out.println("Piece " + (i+1) +" IS NOT verified" +" verified by threadID: " + peerThreadID);
 						
+						if (kill_thread) {
+							Thread.currentThread().interrupt();
+							return;
+						}
 						//invalid piece need to re-send request for that piece
 						i--;
 						continue;
@@ -571,5 +561,9 @@ public class Peer implements Runnable {
 
 	public void setFromPeer(DataInputStream fromPeer) {
 		this.fromPeer = fromPeer;
+	}
+	
+	public void setKill (boolean s) {
+		kill_thread = true;
 	}
 }

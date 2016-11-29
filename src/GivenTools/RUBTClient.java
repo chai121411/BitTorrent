@@ -173,9 +173,9 @@ public class RUBTClient{
 
 		System.out.println("Setting up threads\n");
 		
-		IncomingPeer listenIncomingPeer = new IncomingPeer();
-		Thread t = new Thread(listenIncomingPeer);
-		t.start(); //calls run method in IncomingPeer class
+//		IncomingPeer listenIncomingPeer = new IncomingPeer();
+//		Thread t = new Thread(listenIncomingPeer);
+//		t.start(); //calls run method in IncomingPeer class
 
 		//Make a list of downloading threads to join(to block the main method)
 		List<Thread> downloading_threads = new ArrayList<Thread>();
@@ -185,7 +185,6 @@ public class RUBTClient{
 		downloading_threads.add(user);
 		user.start();
 		
-
 		System.out.println("downloadPeer list size: " + getDownloadPeers().size());
 
 		for (Peer peer : downloadPeers) {

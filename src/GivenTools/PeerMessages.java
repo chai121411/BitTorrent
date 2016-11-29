@@ -28,7 +28,8 @@ public class PeerMessages {
 	private static final byte[] have_prefix = {0,0,0,5};
 	
 	private static final byte[] request_length = {0,0,0,13};
-
+	
+	private Peer peer;
 	
 	/**
 	 * Key for choke message
@@ -71,6 +72,8 @@ public class PeerMessages {
 		toPeer = p.getOutput();
 		fromPeer = p.getInput();
 		
+		peer = p;
+		
 		if (p.getPeerThreadID() < 99)
 			readBitfield();
 	}
@@ -110,15 +113,21 @@ public class PeerMessages {
 	}
 	
 	public byte[] getPiece(int block_length) throws IOException {
-		byte[] length = new byte [5];
-		byte[] data = new byte [block_length + 8];
+		byte[] data = new byte [block_length + 13];
 		byte[] block = null;
 		
-		out.write(length_prefix);
-		out.write(KEY_CHOKE);
 		
-		byte[] choke = out.toByteArray();
+		fromPeer.readFully(data);
 		
+		byte[] choke = {0,0,0,1,0};
+		byte[] temp = new byte [5];
+		
+		System.arraycopy(data, 0, temp, 0, 5);
+		
+		if (Arrays.equals(choke, temp)) {
+			peer.setKill(true);
+			return temp;
+		}
 		/**
 		 * piece: <len=0009+X><id=7> <index><begin><block>
 		 * The piece message is variable length, where X is the length of the block. The payload contains the following information:
@@ -135,23 +144,16 @@ public class PeerMessages {
 		 */
 		
 		try {
-			fromPeer.readFully(length);
-			
-			if (Arrays.equals(length, choke)) {
-				return null;
-			}
-			
-			int expected_len = getBytesAsInt(length, 0) - 9; //9 + X, Offset 0
+			int expected_len = getBytesAsInt(data, 0) - 9; //9 + X, Offset 0
 			//System.out.println("Expected len of block: " + expected_len);
 			//System.out.println(Arrays.toString(data));
 			
-			fromPeer.readFully(data);
-			int index = getBytesAsInt(data, 0); //Offset 5
+			int index = getBytesAsInt(data, 5); //Offset 5
 			//System.out.println("Received piece Index: " + index);
 			block = new byte[expected_len];
 
 			//From data starting at index 13, copy length bytes into block starting at index 0, return this block		
-			System.arraycopy(data, 8, block, 0, expected_len);
+			System.arraycopy(data, 13, block, 0, expected_len);
 			
 		} catch (Exception e) {
 			System.err.println("Failed to get piece: " + e);
